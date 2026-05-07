@@ -39,7 +39,7 @@ print(completion.choices[0].message.content)
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `model` | string | 模型 ID：`kimi-k2.6`、`kimi-latest` |
+| `model` | string | 模型 ID：`kimi-k2.6`、`kimi-k2-thinking`、`kimi-k2-thinking-turbo`、`kimi-latest` |
 | `messages` | array | 消息列表，含 system/user/assistant/tool |
 | `temperature` | float | 0-2，越小越确定 |
 | `max_tokens` | int | 最大生成 token 数 |
@@ -112,4 +112,10 @@ for chunk in stream:
 }
 ```
 
-这是 Claude Code 的**内部模型转发配置**，将对话请求转发到 Kimi API。但它不暴露 Kimi 的原生工具调用能力给 Claude Code 的工具层。如需使用 Kimi 的 Tool Calls，需要在 Python 代码中独立初始化 OpenAI 客户端。
+这是 Claude Code 的**内部模型转发配置**，将对话请求转发到 Kimi API。但它不暴露 Kimi 的原生工具调用能力给 Claude Code 的工具层。如需使用 Kimi 的 Tool Calls，需要在 Python 代码中独立初始化 OpenAI 客户端指向 `https://api.kimi.com/v1`。
+
+**环境变量**：
+
+| 变量 | 说明 |
+|------|------|
+| `KIMI_MODEL_THINKING_KEEP` | 设为 `all` 可启用 Preserved Thinking，让 `kimi-k2.6` / `kimi-k2-thinking` 在多轮间保留历史推理内容。注意会显著增加输入 token。 |
