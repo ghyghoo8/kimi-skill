@@ -27,6 +27,8 @@ Each top-level directory is an **independently discoverable** skill (directory-f
 
 ## Version drift is the main maintenance risk
 
+**Content last verified against `@moonshot-ai/kimi-code` v0.11.0 (2026-06-08).** When updating, first run `kimi --version` and `npm view @moonshot-ai/kimi-code version`; if they differ from 0.11.0, re-check the docs and bump this anchor (and the one in `README.md`).
+
 The CLI/API change often. Before changing commands, flags, paths, or model names, verify against the authoritative docs linked at the bottom of each `SKILL.md` (kimi.com/code/docs for the CLI; platform.kimi.com for the API). Update version-gated notes in place rather than adding parallel sections.
 
 ## Validating changes
