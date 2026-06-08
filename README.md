@@ -5,7 +5,8 @@ Skill（`kimi`）按用户意图分发到 4 个专门子 Skill。核心目标是
 Kimi 主 agent）把 Kimi Code CLI 当作可委派的子 agent**（headless 外壳调用），并灵活使用 kimi 的其它能力。
 
 > 内容依据 Node.js 版 Kimi Code CLI（`@moonshot-ai/kimi-code`）官方文档：https://www.kimi.com/code/docs/
-> 当前校准版本：**kimi-code v0.11.0**（2026-06-08）。更新前先 `kimi --version` 比对。
+> 当前校准版本：**kimi-code v0.11.0**（发布 2026-06-05，核对 2026-06-08）。更新前先 `kimi --version` 比对；
+> 版本历史与各功能起始版本见 `kimi-cli/references/changelog.md`。
 
 ## 组成
 

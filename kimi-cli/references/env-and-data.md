@@ -60,6 +60,7 @@ kimi --yolo -p "批量重命名以下文件..."
 | `KIMI_CODE_EXPERIMENTAL_GOAL_COMMAND` | 覆盖 `goal_command` |
 | `KIMI_CODE_EXPERIMENTAL_MICRO_COMPACTION` | 覆盖 `micro_compaction` |
 | `KIMI_CODE_EXPERIMENTAL_BACKGROUND_ASK` | 覆盖 `background_ask` |
+| `KIMI_CODE_EXPERIMENTAL_SUB_SKILL` | 启用 Sub-Skill 发现（`sub-skill.review`/`consolidate`）。v0.11.0 新增，见 `changelog.md` |
 
 ### 临时模型（`KIMI_MODEL_*`，内存态、不落配置）
 

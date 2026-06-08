@@ -31,6 +31,8 @@ kimi upgrade        # 升级到最新
 kimi migrate        # 迁移旧版 kimi-cli 数据
 ```
 
+> 校准锚点 **v0.11.0（2026-06-05）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
+
 - 首次使用：进入后 `/login` 配置凭证（OAuth 设备码或 API key）。也可 `kimi login` 非交互登录。
 - Windows 需 Git for Windows；Git Bash 非默认路径时设 `KIMI_SHELL_PATH`。
 
@@ -84,6 +86,7 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 - **配置项全表**（`[providers]` / `[models]` / `[thinking]` / `[loop_control]` / `[background]` / `[experimental]` / `[services]` / `[[permission.rules]]` / `[[hooks]]`、tui.toml）→ `references/config-files.md`。
 - **覆盖优先级、环境变量全表、数据目录结构** → `references/env-and-data.md`。要点：命令行（仅本次）＞ 用户 `config.toml`；普通参数不从 shell env 取回退；凭证只从 `config.toml` 读；**无项目级 config.toml，跨项目隔离用 `KIMI_CODE_HOME`**；临时模型走 `KIMI_MODEL_*`。
 - Skills 发现目录、`extra_skill_dirs`、`--skills-dir` 等细节 → `references/cli-reference.md`。
+- **报错速查**（401 鉴权 / 429 限流配额 / 400 请求格式 / 404 模型端点 / 500 服务端 / 工具错误）→ `references/error-reference.md`。
 
 ## 8. 关键快捷键
 

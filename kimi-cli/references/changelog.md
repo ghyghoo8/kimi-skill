@@ -1,0 +1,47 @@
+# 版本跟踪（What's New）
+
+官方更新日志：https://www.kimi.com/code/docs/kimi-code/whats-new.html
+
+**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.11.0（发布 2026-06-05，核对 2026-06-08）。**
+更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
+
+## 各版本要点（新→旧）
+
+### v0.11.0 — 2026-06-05
+- 内置 Skills 直接作为斜杠命令出现，**无需 `skill:` 前缀**。
+- 新增实验性 **Sub-Skill 发现系统**（`sub-skill.review`、`sub-skill.consolidate`），用 `KIMI_CODE_EXPERIMENTAL_SUB_SKILL=1` 启用。
+- Goal 模式在 YOLO 下启动前会确认并建议切到 Auto。
+- 多个 Goal 队列 bug 修复。
+
+### v0.10.0 — 2026-06-04
+- Goal 排队：`/goal next <目标>` 安排后续任务。
+- `/experiments` 实验面板（可视化开关）。
+- 新增内置 `update-config` Skill（直接改配置）。
+- `/reload`：改配置后原地重载会话。
+- `kimi doctor`：配置校验。
+
+### v0.9.0 — 2026-06-03
+- `kimi acp` 子命令（Agent Client Protocol，IDE 集成）。
+- `/btw` 侧聊（非阻塞提问）。
+- Windows Git Bash 探测改进。
+
+### v0.8.0 — 2026-06-02
+- 自主 **Goal 模式**（实验）：`/goal <目标>`。
+- 后台结构化提问，避免流程阻塞。
+- `kimi provider` 子命令（终端管理供应商）。
+- 默认开启后台自动更新。
+
+### v0.7.0 — 2026-06-02
+- `/provider` 交互式供应商管理界面。
+- `KIMI_MODEL_ADAPTIVE_THINKING` 环境变量（自定义端点）。
+- 定时任务时间按本地时区显示。
+
+## 功能首次出现版本（便于版本门控）
+
+| 功能 | 起始版本 |
+|---|---|
+| `/provider` 交互界面 | v0.7.0 |
+| `kimi provider` 子命令、Goal 模式 `/goal` | v0.8.0 |
+| `kimi acp`、`/btw` | v0.9.0 |
+| `kimi doctor`、`/reload`、`/experiments`、`/goal next`、内置 `update-config` | v0.10.0 |
+| 内置 Skills 免 `skill:` 前缀、Sub-Skill 发现（`KIMI_CODE_EXPERIMENTAL_SUB_SKILL`） | v0.11.0 |
