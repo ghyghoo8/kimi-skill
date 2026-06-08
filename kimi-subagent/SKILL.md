@@ -62,6 +62,7 @@ kimi -p "<完整、自包含的任务描述>" \
 - 优先看**退出码**（0 成功，非 0 失败），再看 stdout 内容。退出码清单见 `references/headless-output.md`。
 - 用 `stream-json` 时，逐行解析；最后一条 assistant 消息通常是最终结论。
 - 失败常见原因：未登录（先 `kimi login`）、prompt 上下文不全、被静态 deny 策略拦截、模型/网络错误。
+- **宿主程序化集成（subprocess / cron / CI）的系统排错** —— PATH 找不到 kimi、v0.11 语法变更、headless 下 `auth.login_required`（OAuth vs API key 鉴权，含 cron 可用的配置写法）、stream-json 逐行解析实战 → `references/integration-troubleshooting.md`。
 
 ## 7. 安全边界
 

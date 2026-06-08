@@ -91,3 +91,21 @@ whenToUse: |
 | 插件命令不可用 | 未安装或未新建会话 | `/plugins` → Marketplace 安装，再 `/new` |
 | 实时行情取不到数据 | 非交易时段查实时 | 改查收盘 / 历史数据，或等开盘 |
 | 提示额度不足 | 账号额度耗尽 | 充值 / 检查 Kimi Code 账号额度 |
+
+## 程序化 / 批量调用的关键坑
+
+> 适用于宿主程序（subprocess / 另一个 agent）调本插件取**结构化数据**，而非人在终端问答。
+
+**1. 自然语言查"最近一期"会选错报告期** 🔴
+本插件经 LLM agent 调用底层数据工具。问"最近一期财报"时，agent 常因**时间认知错位**把报告期设成**去年同期**（如实际最新是 2026Q1，却查了 `20250331`），还会在文本里说"这是目前可获取的最近一期"——**数据源其实有最新数据，是 agent 选错了查询参数**。
+- ✅ **显式给报告期**：prompt 里写明"用 `financial_parameter=20260331` 查 2026 一季报"，agent 就会传对。
+- 不要依赖 agent 自己判断"最新"。
+
+**2. 用 stream-json 拿工具原始返回，绕过 LLM 整理**
+默认 `text` 输出是 agent **整理润色后**的文字，可能带它的认知偏差。要可靠结构化数据，用 `-p --output-format stream-json`，从**工具结果消息**（含 `tool_call_id` 的那条）里取数据源原始 CSV/JSON（字段如 `ths_net_sales_rate_stock` 净利率、`ths_gross_selling_rate_stock` 毛利率、`ths_roe_stock` 等），数据精确、不被文本层污染。解析见 [../kimi-subagent/references/integration-troubleshooting.md](../kimi-subagent/references/integration-troubleshooting.md)（第 4 节 stream-json 解析）。
+
+**3. 自动化鉴权别用 OAuth**
+本插件默认走 OAuth（`/login`），登录态**时效短、非交互 subprocess 不可见**，cron 会反复 `auth.login_required`。自动化场景改用 **API key** provider（`config.toml` 配 + 环境变量注入），见 [../kimi-subagent/references/integration-troubleshooting.md](../kimi-subagent/references/integration-troubleshooting.md)（第 3 节 鉴权）。
+
+**4. 批量**
+一次可查多只（实测 5 只 OK，不止旧版 3 只上限），但：① 每只仍受"选错报告期"影响——批量更要显式传参；② **按次计费 × N**；③ 速度约每只数秒，几百只会很慢。**大批量历史/财报建议用专用结构化数据源（如 BaoStock）；本插件更适合按需 / 小批量 + 系统盲区（企业工商 / 股权 / 跨国宏观 / 学术）。**
