@@ -14,7 +14,7 @@
 | `--continue` | `-C` | 续接当前目录最近会话 |
 | `--model <model>` | `-m` | 指定本次启动模型别名；缺省取 config 的 `default_model` |
 | `--prompt <prompt>` | `-p` | 非交互单条执行；流式输出到 stdout，不开 TUI |
-| `--output-format <fmt>` | — | `text` 或 `stream-json`；**仅配合 `-p`** |
+| `--output-format <fmt>` | — | `text`（默认，transcript 样式）或 `stream-json`（JSONL）；**仅配合 `-p`**。调用方要结构化数据看下方 |
 | `--yolo` | `-y` | 自动批准常规工具调用，跳过确认 |
 | `--auto` | — | auto 权限模式启动；工具自动处理，无需用户确认 |
 | `--plan` | — | 以 Plan 模式开新会话；先用只读工具探索 |
@@ -35,9 +35,10 @@
 ### 非交互（`-p`）模式行为
 
 - 采用 **`auto` 权限策略**：常规工具按 auto 规则放行，**静态 deny 策略仍生效**。
-- thinking / assistant 过程内容输出到 **stderr**（`•` 前缀）；assistant 最终回复到 **stdout**。
-- `--output-format stream-json`：stdout 每行一个 JSON（Tool 消息、含 `tool_calls` 的 Assistant 消息）。
-- 解析与退出码详见 `kimi-subagent/references/headless-output.md`。
+- **流向**：Assistant 正文 → **stdout**；thinking、工具进度、"恢复会话"提示 → **stderr**。
+- **`text`（默认）**：stdout 是 transcript 样式——Assistant 正文以 `•` 开头、换行两空格缩进，**非干净纯文本**。
+- **`stream-json`**：stdout 每行一个 JSON 对象；调用工具时按「带 `tool_calls` 的 Assistant 消息 → Tool 消息 → 后续 Assistant 消息」顺序输出；**thinking 不写入 JSONL**。官方未公开精确字段名。
+- 调用方要稳定拿**格式化/结构化数据** → 用 **JSON 契约**（prompt 里要求最后只输出约定 JSON 再提取）。完整解析法、示例与退出码 → `kimi-subagent/references/headless-output.md`。
 
 ## 子命令
 

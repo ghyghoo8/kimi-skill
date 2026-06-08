@@ -4,30 +4,54 @@
 
 ## 两种输出格式
 
-| `--output-format` | 用途 | 形态 |
+`--output-format` **仅在配合 `-p/--prompt` 时有效**。
+
+| `--output-format` | 用途 | stdout 形态 |
 |---|---|---|
-| `text`（默认） | 人读 | stdout 直接是 assistant 最终回复纯文本 |
-| `stream-json` | 程序解析 | stdout **每行一个 JSON 对象**（JSONL） |
+| `text`（默认） | 人读 | **transcript 样式**：Assistant 正文以 `•` 开头、换行后两空格缩进——**不是干净纯文本** |
+| `stream-json` | 程序解析 | **每行一个 JSON 对象**（JSONL） |
 
-> `--output-format` 仅在配合 `-p/--prompt` 时有效。
+## 流向约定（两种格式通用）
 
-## 流向约定
+| 内容 | text 模式 | stream-json 模式 |
+|---|---|---|
+| Assistant 正文 | **stdout**（`•` transcript 样式） | **stdout**（JSONL 的 Assistant 消息） |
+| thinking | stderr（`•` 前缀） | **不写入 JSONL**，也不在 stdout |
+| 工具进度、"恢复会话"提示 | stderr | stderr |
 
-- **stdout**：assistant 的回复内容（`text` 模式为纯文本；`stream-json` 模式为逐行 JSON）。
-- **stderr**：thinking / 中间过程，以 `•` 前缀输出。脚本里通常只读 stdout，把 stderr 留作调试。
-
-```bash
-kimi -p "..." --output-format stream-json 1>out.jsonl 2>progress.log
-```
+> 即两种格式都把 **stdout 留给结果、stderr 留给过程**。脚本通常只读 stdout、把 stderr 留作调试：
+>
+> ```bash
+> kimi -p "..." --output-format stream-json 1>out.jsonl 2>progress.log
+> ```
 
 ## stream-json 逐行结构
 
-每行是一个独立 JSON 对象，按时间顺序出现。主要类型：
+每行一个独立 JSON 对象，按时间顺序出现。官方说明的出现规律：
 
-- **Tool 消息**：记录一次工具调用（工具名、参数、结果等）。
-- **Assistant 消息**：模型回复，可能带 `tool_calls`（表示请求调用工具）；不带 `tool_calls` 的、最后一条通常即**最终结论**。
+- 普通回复直接输出 **Assistant 消息**。
+- 模型调用工具时：先输出**带 `tool_calls` 的 Assistant 消息** → 再输出对应的 **Tool 消息**（工具结果）→ 之后继续输出后续 Assistant 消息。
+- 不带 `tool_calls` 的、最后一条 Assistant 消息通常即**最终结论**。
+- thinking **不在** JSONL 里，所以逐行解析无需过滤思考内容。
 
-> 具体字段名以本机 `kimi` 版本实际输出为准——首次接入时先跑一条命令把 stdout 落盘观察，再按观察到的结构写解析。下面给出稳健的"无需假设精确字段名"的解析法。
+> ⚠️ 官方文档**未公开精确字段名**（没有给 `type`/`role`/`content` 的具体 schema，也无样例行）。首次接入时先跑一条命令把 stdout 落盘观察实际字段，再按观察结果写解析。下面给出**不依赖精确字段名**的稳健解析法。
+
+## 调用方要「格式化数据」时的首选做法
+
+最可靠、跨版本稳定、且**与字段名无关**的方式是 **JSON 契约**——在 prompt 里要求 kimi 最后只输出一段约定结构的 JSON，再从输出中提取：
+
+```bash
+kimi -p '在 /repo 下定位并修复登录 500。
+完成后，最后一行只输出一段 JSON，不要任何额外文字或代码围栏：
+{"root_cause":"...","files_changed":["..."],"summary":"..."}' \
+  --output-format text --auto -w /repo
+```
+
+- 用 **`text` 模式**时：stdout 末尾是带 `•` 的 transcript 行，取最后一段、剥掉行首 `• ` 与缩进后 `json.loads`。
+- 用 **`stream-json` 模式**时：取最后一个非空 JSON 行（即末条 Assistant 消息），从中拿正文文本再 `json.loads` 那段约定 JSON。
+- 想更稳可让 kimi 用 **围栏** 包裹（``` ```json … ``` ```），再正则抽取围栏内容——避免被 transcript 前缀干扰。
+
+这样无论 stream-json 内部字段如何变化，调用方都只依赖**自己在 prompt 里约定的结构**。
 
 ## 解析示例（逐行、取最终回复）
 
@@ -62,11 +86,14 @@ for line in proc.stdout.splitlines():
         pass  # 跳过非 JSON 噪声行
 
 ok = proc.returncode == 0
-# 最终结论：最后一条 assistant 类事件的文本（按本机实际字段名取，常见为 content/text）
-final_text = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
+# 末条非空行＝末条 Assistant 消息；若用了 JSON 契约，从中抽出约定 JSON：
+import re
+last = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
+m = re.search(r"\{.*\}", last, re.S)          # 抓最后一行里的 JSON 片段
+result = json.loads(m.group()) if m else None  # result 即 prompt 里约定的结构
 ```
 
-要稳定拿到结构化结果时，最可靠的做法是**在 prompt 里要求 kimi「最后只输出一段 JSON」**，再从末行直接 `json.loads`，而不依赖事件流内部字段。
+> 始终配 **JSON 契约**（见上一节），解析只依赖你在 prompt 里约定的结构，与 stream-json 内部字段名解耦。
 
 ## 退出码
 

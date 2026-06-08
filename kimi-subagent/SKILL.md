@@ -19,17 +19,17 @@ whenToUse: |
 
 ```bash
 kimi -p "<完整、自包含的任务描述>" \
-  --output-format stream-json \   # 逐行 JSON，便于程序解析；要纯文本用 text
+  --output-format stream-json \   # 逐行 JSON，便于程序解析；text 是 transcript 样式（非纯文本）
   -m kimi-k2.6 \                  # 可选：指定模型
   --auto \                        # 自动权限：常规工具免确认（headless 默认即 auto 策略）
   -w /path/to/project             # 可选：工作目录
 ```
 
 - `-p/--prompt`：非交互执行单条指令，**不开 TUI**，执行完即退出。
-- `--output-format <text|stream-json>`：**仅在 `-p` 下有效**。`text`（默认）人读友好；`stream-json` 机器解析。
+- `--output-format <text|stream-json>`：**仅在 `-p` 下有效**。`text`（默认）transcript 样式（`•` 前缀，非干净纯文本）；`stream-json` 逐行 JSON（thinking 不入 JSONL）。
 - headless 模式采用 **`auto` 权限策略**：常规工具按 auto 规则自动放行，但**静态 deny 策略仍然生效**。
-- stdout = assistant 最终回复；stderr = thinking / 过程内容（`•` 前缀）。
-- 输出结构、字段、退出码详见 → `references/headless-output.md`。
+- 流向：Assistant 正文 → stdout；thinking / 工具进度 / 恢复提示 → stderr。
+- **要格式化数据**：用 **JSON 契约**——在 prompt 里要求「最后只输出一段约定 JSON」，再从输出提取，**与内部字段名解耦**。完整解析法、示例、退出码 → `references/headless-output.md`。
 
 ## 2. 铁律：上下文必须自包含
 
