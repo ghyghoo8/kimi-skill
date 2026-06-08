@@ -11,8 +11,8 @@ A **collection of Agent Skills** (pure Markdown — no build/lint/test/runtime) 
 Each top-level directory is an **independently discoverable** skill (directory-form `SKILL.md` + optional `references/`):
 
 - `kimi-router/` (skill name `kimi`) — entry router. Body is a thin **intent → sub-skill** dispatch table; it deliberately holds no detail. Its `description`/`whenToUse` are deliberately broad so any kimi-related query triggers it.
-- `kimi-subagent/` — **the core skill**: host shells out to `kimi -p ... --output-format stream-json` to run Kimi as an isolated sub-agent. References: `headless-output.md` (output formats, parsing, exit codes), `patterns.md` (concurrency, task-splitting, when-to-delegate).
-- `kimi-cli/` — interactive Node CLI usage. References: `cli-reference.md` (flags/subcommands/mutual-exclusion/keys), `slash-commands.md`.
+- `kimi-subagent/` — **the core skill**: host shells out to `kimi -p ... --output-format stream-json` to run Kimi as an isolated sub-agent. References: `headless-output.md` (output formats, parsing, exit codes — incl. Goal-mode `3`/`6`), `patterns.md` (concurrency, task-splitting, when-to-delegate, built-in `coder`/`explore`/`plan`).
+- `kimi-cli/` — interactive Node CLI usage. References: `cli-reference.md` (flags/subcommands/`provider`/mutual-exclusion), `slash-commands.md`, `config-files.md` (every `config.toml`/`tui.toml` key), `env-and-data.md` (override precedence, all env vars, data-dir tree), `plugins.md` (manifest, `/plugins`, MCP-in-plugin), `hooks.md` (events table, stdin/exit-code contract), `interaction.md` (TUI keys, sessions, Goal mode, use-cases).
 - `kimi-api/` — open-platform API + Tool Calls. References: `api_guide.md`, `tool_reference.md`.
 - `kimi-datasource/` — the official **data plugin**: natural-language queries over financial (stocks + macro), corporate, and academic data.
 
@@ -28,6 +28,8 @@ Each top-level directory is an **independently discoverable** skill (directory-f
 ## Version drift is the main maintenance risk
 
 **Content last verified against `@moonshot-ai/kimi-code` v0.11.0 (2026-06-08).** When updating, first run `kimi --version` and `npm view @moonshot-ai/kimi-code version`; if they differ from 0.11.0, re-check the docs and bump this anchor (and the one in `README.md`).
+
+On 2026-06-08 the following official pages were crawled and folded into `kimi-cli`/`kimi-subagent`/`kimi-datasource`: `reference/kimi-command`, `configuration/config-files`, `configuration/overrides`, `configuration/env-vars`, `configuration/data-locations`, `customization/datasource`, `customization/plugins`, `customization/agents`, `customization/hooks`, `guides/interaction`, `guides/sessions`, `guides/goals`, `guides/use-cases`. When re-verifying drift, diff against these same pages.
 
 The CLI/API change often. Before changing commands, flags, paths, or model names, verify against the authoritative docs linked at the bottom of each `SKILL.md` (kimi.com/code/docs for the CLI; platform.kimi.com for the API). Update version-gated notes in place rather than adding parallel sections.
 

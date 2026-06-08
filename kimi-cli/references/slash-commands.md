@@ -62,3 +62,7 @@
 ## 退出
 
 `/exit`（`/quit` `/q`）退出 Kimi Code CLI。
+
+---
+
+**深入**：`/plugins` 子命令与 manifest → `plugins.md`；`/goal` 完整语义 → `interaction.md`；会话/导出细节 → `interaction.md`；权限规则/钩子 → `config-files.md`、`hooks.md`；按键与输入机制 → `interaction.md`。

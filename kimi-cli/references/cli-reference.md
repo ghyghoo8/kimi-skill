@@ -12,7 +12,7 @@
 | `--help` | `-h` | 帮助信息 |
 | `--session [id]` | `-S` | 续接指定 id 会话，或交互式选择 |
 | `--continue` | `-C` | 续接当前目录最近会话 |
-| `--model <model>` | `-m` | 指定本次启动模型别名 |
+| `--model <model>` | `-m` | 指定本次启动模型别名；缺省取 config 的 `default_model` |
 | `--prompt <prompt>` | `-p` | 非交互单条执行；流式输出到 stdout，不开 TUI |
 | `--output-format <fmt>` | — | `text` 或 `stream-json`；**仅配合 `-p`** |
 | `--yolo` | `-y` | 自动批准常规工具调用，跳过确认 |
@@ -20,6 +20,8 @@
 | `--plan` | — | 以 Plan 模式开新会话；先用只读工具探索 |
 | `--skills-dir <dir>` | — | 从指定目录加载 Skills，**替代自动发现**（可重复） |
 | `--work-dir <dir>` | `-w` | 工作目录 |
+
+**隐藏别名**：`-r` / `--resume` ＝ `--session`；`--yes` / `--auto-approve` ＝ `--yolo`。
 
 ### Flag 互斥规则
 
@@ -43,11 +45,65 @@
 |---|---|
 | `kimi login` | 非交互 OAuth 设备码登录 |
 | `kimi acp` | 切换 Agent Client Protocol 模式（IDE 集成） |
-| `kimi doctor` | 校验 `config.toml` 与 `tui.toml` |
-| `kimi export [id]` | 打包会话为 ZIP（`-o` / `-y` / `--no-include-global-log`） |
+| `kimi doctor [config\|tui] [path]` | 校验 `config.toml` / `tui.toml` |
+| `kimi export [id]` | 打包会话为 ZIP |
 | `kimi migrate` | 迁移旧版 kimi-cli 数据到 kimi-code |
 | `kimi upgrade` | 检查并安装更新 |
-| `kimi provider <action>` | 供应商管理：`add` / `remove` / `list` / `catalog list` / `catalog add` |
+| `kimi provider <action>` | 供应商管理（见下） |
+
+### `kimi login`
+
+RFC 8628 设备码流程，不进 TUI。验证 URL 与 user code 打印到 **stderr**，轮询直到浏览器授权完成；token 写入与 TUI `/login` 相同位置。无 flag。成功退出码 0，取消/失败 1。
+
+### `kimi acp`
+
+ACP（Agent Client Protocol）模式，经 stdin/stdout 用 JSON-RPC 与 IDE 通信，通常由 IDE 自动拉起。无 flag。
+
+### `kimi doctor [subcommand] [path]`
+
+不启动 TUI、不改文件地校验配置。读 `KIMI_CODE_HOME`（未设则 `~/.kimi-code`）。
+
+| 形式 | 说明 |
+|---|---|
+| `kimi doctor` | 校验默认 `config.toml` 和 `tui.toml` |
+| `kimi doctor config [path]` | 只校验 `config.toml`，给路径则校验该文件 |
+| `kimi doctor tui [path]` | 只校验 `tui.toml`，给路径则校验该文件 |
+
+给了显式 path 时文件必须存在。全部合法/跳过则退出码 0；指定文件缺失或非法则 1。
+
+### `kimi export [sessionId] [options]`
+
+打包会话目录为 ZIP（分享/存档/报 issue）。
+
+| 参数 | 短 | 说明 |
+|---|---|---|
+| `sessionId` | — | 要导出的会话 id；省略则在当前目录选最近会话并确认 |
+| `--output <path>` | `-o` | 输出 ZIP 路径；缺省为当前目录标准文件名 |
+| `--yes` | `-y` | 跳过默认会话的确认，直接导出 |
+| `--no-include-global-log` | — | 排除全局诊断日志 `~/.kimi-code/logs/kimi-code.log`（默认包含） |
+
+### `kimi provider <action> [options]`
+
+Shell 内管理供应商，等价于非交互的 TUI `/provider`。
+
+| 动作 | 说明 |
+|---|---|
+| `provider add <url>` | 从自定义注册表（`api.json`）导入全部供应商。`--api-key <key>`（或环境变量 `KIMI_REGISTRY_API_KEY`）。写入 `[providers.<id>]` 与 `[models.<alias>]`；id 已存在则先删后写；不自动设默认模型 |
+| `provider remove <providerId>` | 删除该供应商及其全部模型别名；若它是默认则清空 `default_model` |
+| `provider list` | 每行打印一个已配供应商（类型/模型数/来源）；加 `--json` 输出原始 `providers`/`models` 表 |
+| `provider catalog list [providerId]` | 浏览 models.dev 公共目录而不改配置。`--filter <子串>`（对 id/name 不区分大小写）、`--url <url>`（默认 `https://models.dev/api.json`）、`--json` |
+| `provider catalog add <providerId>` | 按 id 直接导入已知供应商（如 `anthropic`/`openai`）。`--api-key <key>`（或 `KIMI_REGISTRY_API_KEY`）、`--default-model <modelId>`（导入后设 `default_model` 为 `<providerId>/<modelId>`）、`--url <url>` |
+
+## 环境变量（常用）
+
+| 变量 | 作用 |
+|---|---|
+| `KIMI_CODE_HOME` | 数据目录，默认 `~/.kimi-code`（`kimi doctor` 等据此定位配置） |
+| `KIMI_REGISTRY_API_KEY` | `provider add` / `provider catalog add` 的注册表/供应商 API key |
+| `KIMI_SHELL_PATH` | Windows 下 Git Bash 非默认路径时指定 shell |
+
+> 全部环境变量（`KIMI_MODEL_*` 临时模型、`KIMI_LOG_*`、`KIMI_CODE_EXPERIMENTAL_*`、OAuth 端点等）、
+> 覆盖优先级与数据目录结构见 **`env-and-data.md`**。
 
 ## Skills 发现
 
@@ -63,9 +119,11 @@
 
 ## 配置与数据位置
 
-- 数据目录：`~/.kimi-code/`
-- 配置文件：`config.toml`（行为/供应商/模型/skills 等）+ `tui.toml`（终端 UI）
+- 数据目录：`~/.kimi-code/`（完整目录结构见 `env-and-data.md`）
+- 配置文件：`config.toml`（行为/供应商/模型/skills 等）+ `tui.toml`（终端 UI）。**所有配置键的完整说明见 `config-files.md`**。
+- MCP 服务器不在 config.toml，而在 `~/.kimi-code/mcp.json` 或项目级 `.kimi-code/mcp.json`
 - `kimi doctor` 校验配置合法性
+- 覆盖优先级（配置文件 / 命令行 / 环境变量）见 `env-and-data.md`
 
 ## 键盘快捷键
 

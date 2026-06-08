@@ -57,4 +57,18 @@ kimi -S <id> -p "按上一轮方案实施重构，最后输出改动文件清单
 
 ## 与内置子 agent 的关系
 
-Kimi Code CLI **内部**已有内置子 agent（`coder` / `explore` / `plan`），由 kimi 主 agent 自动派发、上下文隔离。本 Skill 讲的是**宿主从外部**把整个 `kimi` 进程当子 agent 调用——两层不冲突：你 `kimi -p` 派出去的那个 kimi，内部仍可能再自行派发它的内置子 agent。
+Kimi Code CLI **内部**已有三个内置子 agent，由 kimi 主 agent **自动派发**（按任务复杂度、上下文消耗、子任务独立性择时调度，无需用户手动指定；也可在对话里直接让主 agent 用某个）：
+
+| 内置子 agent | 取向 | 能力 |
+|---|---|---|
+| `coder` | 默认、通用软件工程 | 读写文件、执行命令、搜索代码、落地具体改动 |
+| `explore` | 仓库探索 | **只读**，不改文件；快速搜索/阅读/总结仓库 |
+| `plan` | 实现规划 / 架构设计 | **连 Shell 都不给**，专注「想清楚怎么做」而非「做」 |
+
+- **上下文隔离**：每个子 agent 独立上下文窗口，只看到主 agent 显式传入的任务描述，看不到主 agent 对话历史；其中间推理与工具调用不回流，只有**最终结果**进入主 agent 上下文。
+- **权限继承**：子 agent 继承主 agent 的权限规则——主 agent 经 `/permission` 或审批时「始终允许」接受的规则，自动覆盖它派发的所有子 agent。派发以审批请求形式出现（命中 allow 规则或 YOLO 模式则免）。
+- **无自定义 agent 文件格式**：官方未提供 YAML/配置式自定义 agent；要定制行为用 **Skills**。
+- **存储**：子 agent 状态落在当前会话目录的 `agents/` 子目录，每个实例一个时序 `wire.jsonl`（prompt、消息历史、最终状态）。
+
+> 本 Skill 讲的是**宿主从外部**把整个 `kimi` 进程当子 agent 调用——两层不冲突：你 `kimi -p` 派出去的那个 kimi，内部仍可能再自行派发它的内置子 agent。
+> 官方文档：https://www.kimi.com/code/docs/kimi-code-cli/customization/agents.html

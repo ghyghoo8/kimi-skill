@@ -72,8 +72,12 @@ final_text = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
 
 | 退出码 | 含义 |
 |---|---|
-| `0` | 成功 |
-| 非 `0` | 失败（被 deny 策略拦截、未登录、模型/网络错误、参数错误等） |
+| `0` | 成功（Goal 模式：目标完成） |
+| `3` | Goal 模式：目标被阻断（需用户输入 / 无法达成 / 超预算 / 运行时失败） |
+| `6` | Goal 模式：目标被暂停 |
+| 其它非 `0` | 失败（被 deny 策略拦截、未登录、模型/网络错误、参数错误等） |
+
+> `-p` 下的 Goal 模式只支持「创建目标」，故有 `3`/`6` 这两个特殊码（详见 `kimi-cli/references/interaction.md`）。
 
 判断成败优先用退出码，其次看 stdout 内容是否符合 prompt 要求。
 
