@@ -1,57 +1,48 @@
 # kimi-skill
-根据[kimi开发平台文档](https://platform.kimi.com/docs/overview)生成的cc-skill
-## Skill 安装指南
-Skill 的安装方式主要取决于你所使用的 AI 平台或工具（如 Claude Code, OpenClaw 等）。以下是几种主流的安装方法：
-------------------------------
-## 1. Claude Code 官方/第三方 Skill 安装
-对于使用 Claude Code 的开发者，推荐使用命令行工具进行快速安装。
-## A. 命令行自动安装（最推荐）
-使用 npx 或 bunx 直接从 GitHub 仓库获取：
 
-# 格式：npx skills add <用户名/仓库名>
-npx skills add <owner/repo> -g -y
+一组面向 **Kimi (Moonshot AI)** 平台的 Agent Skills，采用 **skill-router** 架构：一个总入口路由
+Skill（`kimi`）按用户意图分发到 4 个专门子 Skill。核心目标是**指引宿主 agent（如 Claude Code /
+Kimi 主 agent）把 Kimi Code CLI 当作可委派的子 agent**（headless 外壳调用），并灵活使用 kimi 的其它能力。
 
-## B. 手动安装
+> 内容依据 Node.js 版 Kimi Code CLI（`@moonshot-ai/kimi-code`）官方文档：https://www.kimi.com/code/docs/
 
-   1. 下载 Skill 的源码（通常是 .js 或 .ts 文件）。
-   2. 将文件存放在以下路径之一：
-   * 当前项目路径：./.claude/skills/
-      * 全局路径：~/.claude/skills/
-   3. 重启 Claude Code 即可自动加载。
+## 组成
 
-------------------------------
-## 2. 使用 OpenSkills 工具管理
-OpenSkills 是一个通用的技能管理利器。
+| 目录 | Skill 名 | 作用 |
+|---|---|---|
+| `kimi-router/` | `kimi` | 入口路由：意图 → 子 Skill 分发表 |
+| `kimi-subagent/` | `kimi-subagent` | ★ 宿主把 `kimi` 当子 agent：`kimi -p`、stream-json、传上下文、并发委派、多轮、解析 |
+| `kimi-cli/` | `kimi-cli` | Node 版 CLI 交互用法、完整 flag、会话、斜杠命令、插件/MCP、安装升级 |
+| `kimi-api/` | `kimi-api` | Kimi 开放平台 API、模型列表、Tool Calls、流式 |
+| `kimi-datasource/` | `kimi-datasource` | `kimi-datasource` 插件 `query_stock`，A 股/港股行情与技术指标 |
 
-* 安装管理工具：
+每个子目录是一个**独立、可单独触发**的 Skill（目录式 `SKILL.md` + 可选 `references/`）。
+路由 Skill 与子 Skill 通过各平台均支持的 `/skill:<name>` 调用串联。
 
-npm i -g openskills
+## 安装
 
-* 安装特定技能：
+本仓库是「一仓多 Skill」，需把**每个子目录**分别放入技能根目录（不要把整个仓库当成单个 Skill）。
 
-openskills install <用户名/仓库名>
+### Claude Code
 
+```bash
+# 全局（所有项目可用）：把 5 个子目录拷入 ~/.claude/skills/
+cp -R kimi-router kimi-subagent kimi-cli kimi-api kimi-datasource ~/.claude/skills/
+# 或项目级：拷入 <project>/.claude/skills/
+```
 
-------------------------------
-## 3. OpenClaw (原 Clawdbot) 安装方式
-针对集成在即时通讯软件（如微信、Telegram）中的机器人：
+### Kimi Code CLI
 
-* 对话指令安装：
-在对话框中直接输入：安装技能 <技能名称>。
-* 后台面板上传：
-通过 OpenClaw 的管理后台，在“技能管理”模块直接上传 Skill 文件夹。
+```bash
+# 用户级：~/.kimi-code/skills/ 或 ~/.agents/skills/
+cp -R kimi-router kimi-subagent kimi-cli kimi-api kimi-datasource ~/.kimi-code/skills/
+# 项目级：<project>/.kimi-code/skills/ 或 <project>/.agents/skills/
+# 或在 config.toml 配置 extra_skill_dirs 指向本仓库
+```
 
-------------------------------
-## 4. 常见问题与目录规范
-为了确保 Skill 能够正常运行，请检查以下内容：
+装好后，与 kimi 相关的请求会触发 `kimi` 路由 Skill，再分发到对应子 Skill；也可直接
+`/skill:kimi-subagent` 等调用某个子 Skill。
 
-| 检查项 | 说明 |
-|---|---|
-| 目录结构 | 技能通常以文件夹形式存在，内含 index.js 或 skill.json。 |
-| 依赖环境 | 部分 Skill 需要 Node.js 环境或特定的 API Key。 |
-| 权限设置 | 确保 AI 具有读取 .claude/skills/ 目录的权限。 |
+## 维护
 
-------------------------------
-💡 提示：如果你需要寻找高质量的现成技能，可以访问 [Awesome Agent Skills](https://github.com/libukai/awesome-agent-skills) 仓库。
-你目前是打算为 Claude Code 还是 其他 AI 平台 安装特定功能的 Skill 呢？
-
+CLI / API 变化较快，更新前请核对官方文档（见各 `SKILL.md` 底部链接）。维护约定详见 `CLAUDE.md`。

@@ -1,0 +1,47 @@
+---
+name: kimi
+description: |
+  Kimi (Moonshot AI) 总入口路由 Skill。当需要把任务委派给 Kimi Code CLI 当子 agent 跑、
+  使用 kimi 命令行（交互/会话/斜杠命令/插件/MCP/安装升级）、调用 Kimi 开放平台 API
+  (kimi-k2.6 / kimi-latest) 与工具调用、或用 kimi-datasource 查 A 股/港股行情时，先进此 Skill 做分发。
+whenToUse: |
+  用户提到 kimi / Kimi CLI / kimi-code / 月之暗面 / Moonshot；想让 kimi 跑一段活、并行委派、
+  headless 调用 kimi；问 kimi 命令行参数、会话、斜杠命令、装插件/MCP；接入 Kimi API 或 tool calls；
+  查个股 A 股/港股行情、技术指标、自选股。
+---
+
+# Kimi 路由（skill-router）
+
+本 Skill 是 **Kimi 全平台能力的入口与分发器**。它本身不含细节——按下表识别用户意图，
+**调用（`/skill:<name>`）或读取对应子 Skill 的 `SKILL.md` 后再作答**。子 Skill 各自独立、也可被直接触发。
+
+> 核心定位：指引**宿主 agent**（如 Claude Code / Kimi 主 agent）把 **Kimi Code CLI 当作可委派的子 agent**（headless 外壳调用），并灵活使用 kimi 的其它能力。
+
+## 意图 → 子 Skill 路由表
+
+| 用户意图（命中任一即路由） | 子 Skill |
+|---|---|
+| 把子任务**委派**给 kimi 跑、**并行**派活、**headless/`-p` 调用** kimi、让 kimi 在隔离上下文里独立完成一段工作、解析 kimi 输出 | **`kimi-subagent`** ★ |
+| **交互式**使用 kimi、命令行**参数/flag**、**会话**管理、**斜杠命令**、装**插件/MCP**、Plan/YOLO/Auto 模式、**安装/升级/登录**、`kimi doctor` | **`kimi-cli`** |
+| 接入 **Kimi 开放平台 API**（`kimi-k2.6` / `kimi-latest`）、**工具调用（Tool Calls）**、流式响应、用代码调 Kimi | **`kimi-api`** |
+| 查**个股 A 股/港股**行情、最新价/涨跌幅、技术指标、收/开盘摘要、**自选股**、`query_stock` | **`kimi-datasource`** |
+
+## 路由原则
+
+- **先路由，再作答**：命中即加载对应子 Skill，不要凭记忆直接回答 kimi 相关问题（CLI/API 变化快）。
+- **可组合**：一个请求可能跨多个子 Skill（例：「写个 Python 脚本调 Kimi API 并发委派 kimi 跑测试」→ `kimi-api` + `kimi-subagent`）。按需依次加载。
+- **拿不准归属**时，默认进 `kimi-subagent`（最核心场景）或 `kimi-cli`（通用命令行）。
+- 不在本文件堆砌细节，避免与子 Skill 重复、撑大上下文。
+
+## 子 Skill 一览
+
+- `kimi-subagent` — 宿主把 `kimi` 当子 agent：`kimi -p`、`--output-format stream-json`、传上下文、并发委派、多轮、输出解析、退出码。
+- `kimi-cli` — Node 版 Kimi Code CLI 交互用法、完整 flag、会话、斜杠命令、插件/MCP、安装升级。
+- `kimi-api` — Kimi 开放平台 API、模型列表、Tool Calls、流式。
+- `kimi-datasource` — `kimi-datasource` 插件 `query_stock` 工具，A 股/港股行情与技术指标。
+
+## 官方文档
+
+- Kimi Code 文档：https://www.kimi.com/code/docs/
+- Kimi Code CLI 入门：https://www.kimi.com/code/docs/kimi-code-cli/guides/getting-started.html
+- 开放平台：https://platform.kimi.com
