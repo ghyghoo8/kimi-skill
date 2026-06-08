@@ -139,7 +139,39 @@ env.setdefault("KIMI_CODE_HOME", os.path.join(os.path.expanduser("~"), ".kimi-co
 
 > 关键认知：API key **只解决 LLM 那一半**；datasource 数据服务**仍需 OAuth 凭证**（先在交互端 `/login` 写入凭证文件），API key 替代不了。
 >
-> 若 `KIMI_CODE_HOME` 已注入、凭证也在，仍**间歇**报 `provider.connection_error`（且**不在** 401/403/429 错误表里）：那是 CLI **内部 provider RPC 层**的连接波动（数据服务后端/网络），**与鉴权无关**——重试或等服务恢复即可，别再往鉴权方向查。
+> 若 `KIMI_CODE_HOME` 已注入、凭证也在，仍报 `provider.connection_error` 或 `Kimi Code access_token has expired. Run /login again`（且**不在** 401/403/429 错误表里）：**先查第 3c 节的代理大小写**——实测里这类"过期/连不上"绝大多数是 Node 没吃到代理、够不到 `auth.kimi.com` 续期，而非真的凭证失效或服务端波动。排除代理后仍间歇失败，才考虑是数据服务后端 RPC 波动（重试 / 等恢复）。
+
+---
+
+## 3c. 代理：Node 的 fetch 只认**大写** `HTTPS_PROXY`（最隐蔽的坑）
+
+⚠️ 需翻墙/代理出网的环境里，**最容易被误判成"OAuth 过期"的其实是代理没传到位**。
+
+**现象**：subprocess 调 datasource 报 `Kimi Code access_token has expired. Run /login again`，或 `kimi login` 报 `OAuth request to https://auth.kimi.com/api/oauth/token failed: fetch failed`。一看凭证——`access_token` 确实过期了，但 **`refresh_token` 还有效**（可解 JWT 看 `exp`，通常一个月）。照理 CLI 该用 refresh_token 静默续期，却续不了。
+
+**根因**：kimi 是 Node 应用，其 fetch（undici）**只读大写 `HTTPS_PROXY` / `HTTP_PROXY`**；而很多 shell（clash/v2ray 默认）**只导出小写 `https_proxy` / `http_proxy`**（外加一个 socks 的 `ALL_PROXY`）。于是 Node **拿不到代理 → 直连 `auth.kimi.com` 失败 → refresh_token 用不上 → 表现为"access_token 过期、要重登"**。`access_token` 短命（实测 `expires_in: 900`，15 分钟），一过这窗口就触发，极具迷惑性。
+
+**验证**（一眼区分代理问题 vs 真失效）：
+
+```bash
+# 经代理可达 → 405（GET 打了 POST 端点，405 说明"通了"）；直连 → 000（不通）
+curl -s -o /dev/null -w "proxy:%{http_code}\n"            --max-time 12 https://auth.kimi.com/api/oauth/token
+curl -s -o /dev/null -w "direct:%{http_code}\n" --noproxy '*' --max-time 12 https://auth.kimi.com/api/oauth/token
+```
+
+若 `proxy:405 / direct:000`，就是代理没传给 Node。
+
+**解法**：给子进程把小写代理**镜像成大写**（宿主代码里做，免改用户 shell）：
+
+```python
+for up, lo in (("HTTPS_PROXY", "https_proxy"), ("HTTP_PROXY", "http_proxy")):
+    if not env.get(up) and env.get(lo):
+        env[up] = env[lo]
+```
+
+或临时命令行直接显式给大写：`HTTPS_PROXY=http://127.0.0.1:7890 kimi login`。补上后 `kimi login` **静默用 refresh_token 换出新凭证（无需设备码）**，datasource 立即可用（实测茅台 close=1262.98 / 五粮液 79.96，报告期正确）。
+
+> 排查顺序记牢：**报 access_token expired / connection_error，先验代理大小写，再怀疑凭证或服务端**。多数情况下 refresh_token 没失效，只是 Node 够不到续期端点。
 
 ---
 

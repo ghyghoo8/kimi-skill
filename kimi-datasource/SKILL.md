@@ -91,6 +91,7 @@ whenToUse: |
 | 插件命令不可用 | 未安装或未新建会话 | `/plugins` → Marketplace 安装，再 `/new` |
 | 实时行情取不到数据 | 非交易时段查实时 | 改查收盘 / 历史数据，或等开盘 |
 | 提示额度不足 | 账号额度耗尽 | 充值 / 检查 Kimi Code 账号额度 |
+| `access_token expired` / `login failed: fetch failed`，但 refresh_token 没过期（代理环境）| Node 只认大写 `HTTPS_PROXY`，shell 只导出小写 → 够不到 `auth.kimi.com` 续期 | 显式给大写 `HTTPS_PROXY=...`；详见 troubleshooting 第 3c 节 |
 
 ## 程序化 / 批量调用的关键坑
 
