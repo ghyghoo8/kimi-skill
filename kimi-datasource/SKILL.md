@@ -104,8 +104,10 @@ whenToUse: |
 **2. 用 stream-json 拿工具原始返回，绕过 LLM 整理**
 默认 `text` 输出是 agent **整理润色后**的文字，可能带它的认知偏差。要可靠结构化数据，用 `-p --output-format stream-json`，从**工具结果消息**（含 `tool_call_id` 的那条）里取数据源原始 CSV/JSON（字段如 `ths_net_sales_rate_stock` 净利率、`ths_gross_selling_rate_stock` 毛利率、`ths_roe_stock` 等），数据精确、不被文本层污染。解析见 [../kimi-subagent/references/integration-troubleshooting.md](../kimi-subagent/references/integration-troubleshooting.md)（第 4 节 stream-json 解析）。
 
-**3. 自动化鉴权别用 OAuth**
-本插件默认走 OAuth（`/login`），登录态**时效短、非交互 subprocess 不可见**，cron 会反复 `auth.login_required`。自动化场景改用 **API key** provider（`config.toml` 配 + 环境变量注入），见 [../kimi-subagent/references/integration-troubleshooting.md](../kimi-subagent/references/integration-troubleshooting.md)（第 3 节 鉴权）。
+**3. 鉴权是「两套」：LLM 用 API key，数据服务必须 OAuth + `KIMI_CODE_HOME`** 🔴
+- **LLM 推理**：可用 API key（`kimi-apikey` model），免 OAuth 登录态在 subprocess 下失效。
+- **本插件的数据服务**：**必须 OAuth 凭证**（先在交互端 `/login` 写入凭证文件），API key **替代不了**。subprocess 调用还要注入 **`KIMI_CODE_HOME=~/.kimi-code`** 让插件定位凭证文件，否则即使 LLM 通了、数据工具仍报 `provider.connection_error`。
+- 配好后两套鉴权各司其职即可调通。详见 [../kimi-subagent/references/integration-troubleshooting.md](../kimi-subagent/references/integration-troubleshooting.md)（第 3 节 API key + 第 3b 节 `KIMI_CODE_HOME`）。
 
 **4. 批量**
 一次可查多只（实测 5 只 OK，不止旧版 3 只上限），但：① 每只仍受"选错报告期"影响——批量更要显式传参；② **按次计费 × N**；③ 速度约每只数秒，几百只会很慢。**大批量历史/财报建议用专用结构化数据源（如 BaoStock）；本插件更适合按需 / 小批量 + 系统盲区（企业工商 / 股权 / 跨国宏观 / 学术）。**

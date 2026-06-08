@@ -114,6 +114,33 @@ subprocess.run(
 | 跑一会儿又 login_required | OAuth 时效短 | 用 API key（无时效问题）|
 | `401`（直测 API） | key 失效/过期 | 换有效 key |
 
+> 后端返回的完整错误目录（401/402/403/429/400/404/500 + 工具错误）→ `../../kimi-cli/references/error-reference.md`。
+
+---
+
+## 3b. kimi-datasource 等 MCP 插件：数据服务的**第二套**鉴权（`KIMI_CODE_HOME`）
+
+⚠️ 把第 3 节的 API key 鉴权配好后，**纯 LLM 调用通了，但一调 `kimi-datasource` 数据工具仍报 `provider.connection_error`** —— 因为**插件的数据服务鉴权与 LLM provider 是两套**：
+
+| 环节 | 鉴权 | 凭证来源 |
+|---|---|---|
+| LLM 推理 | API key（`kimi-apikey` model）| 进程环境 `KIMI_API_KEY` |
+| **datasource 数据服务** | **OAuth 凭证（Bearer token）** | `KIMI_CODE_HOME` 下的 `oauth/...` 凭证文件 |
+
+datasource 的 MCP server（`kimi-datasource.mjs`）用 **`KIMI_CODE_HOME`** 定位 OAuth 凭证文件（默认 `~/.kimi-code`）。**非交互 subprocess 默认没有这个环境变量 → 定位不到凭证 → `connection_error`**。
+
+**解法：把 `KIMI_CODE_HOME` 一并注入子进程**：
+
+```python
+env.setdefault("KIMI_CODE_HOME", os.path.join(os.path.expanduser("~"), ".kimi-code"))
+```
+
+补上后，`kimi-apikey`(LLM) + datasource(OAuth 凭证文件) 两套鉴权各司其职，subprocess 即可调通数据插件（实测能拿到真实行情/财报，如 `close_summary` close=1262.98 / 财报净利率精确匹配）。
+
+> 关键认知：API key **只解决 LLM 那一半**；datasource 数据服务**仍需 OAuth 凭证**（先在交互端 `/login` 写入凭证文件），API key 替代不了。
+>
+> 若 `KIMI_CODE_HOME` 已注入、凭证也在，仍**间歇**报 `provider.connection_error`（且**不在** 401/403/429 错误表里）：那是 CLI **内部 provider RPC 层**的连接波动（数据服务后端/网络），**与鉴权无关**——重试或等服务恢复即可，别再往鉴权方向查。
+
 ---
 
 ## 4. stream-json 输出解析（实战字段）
