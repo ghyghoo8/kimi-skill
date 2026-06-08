@@ -14,7 +14,7 @@ Each top-level directory is an **independently discoverable** skill (directory-f
 - `kimi-subagent/` — **the core skill**: host shells out to `kimi -p ... --output-format stream-json` to run Kimi as an isolated sub-agent. References: `headless-output.md` (output formats, parsing, exit codes), `patterns.md` (concurrency, task-splitting, when-to-delegate).
 - `kimi-cli/` — interactive Node CLI usage. References: `cli-reference.md` (flags/subcommands/mutual-exclusion/keys), `slash-commands.md`.
 - `kimi-api/` — open-platform API + Tool Calls. References: `api_guide.md`, `tool_reference.md`.
-- `kimi-datasource/` — the `query_stock` stock-data plugin.
+- `kimi-datasource/` — the official **data plugin**: natural-language queries over financial (stocks + macro), corporate, and academic data.
 
 **Progressive disclosure:** quick-reference lives in each `SKILL.md`; exhaustive detail lives in that skill's `references/`. Don't duplicate the same example across both. The router must not absorb sub-skill detail.
 
