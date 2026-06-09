@@ -175,6 +175,32 @@ for up, lo in (("HTTPS_PROXY", "https_proxy"), ("HTTP_PROXY", "http_proxy")):
 
 ---
 
+## 3d. `provider.connection_error` 间歇：先排查**宿主执行环境的网络**（沙箱/受限网络放大）
+
+⚠️ 反复撞 `provider.connection_error: Connection error.`（日志里 `at listOnTimeout`，即**超时**）时，**别急着归因"kimi 服务宕"或"自己代码错"——先确认宿主调用 kimi 的网络路径本身是否受限**。
+
+**关键认知：错误分两层，curl 测不到真正翻车的那层**
+
+| 探测 | 现象 | 含义 |
+|---|---|---|
+| `curl` 打 `api.kimi.com/coding/v1/...` | **HTTP 403 / 401，秒回** | 只到了**网关层**（403=非 coding-agent 白名单，401=没带 key）。网关健康 ≠ 后端健康 |
+| kimi CLI（白名单内 agent） | `connection_error` 超时 | 穿过网关、**到模型推理后端那一跳**超时——curl 够不到这层，所以 **curl 永远"正常"、kimi 却 flap** |
+
+**沙箱/受限网络是放大器（实测，最隐蔽）**：宿主若在**受限网络环境**里 spawn kimi —— 如某些 AI agent 的 Bash **沙箱**、容器/CI 的受限出网、网络命名空间隔离 —— 这层会给"到模型后端"那一跳**叠加开销/不稳**。后端本身有边际延迟波动时，**沙箱内先崩、非沙箱/直连还扛得住**：
+- 实测同一时刻、同一条命令：**沙箱内单发 4/4 `connection_error`，沙箱外 + 真实交互终端都成功**；服务良好窗口里两者都通。
+- 即**失败概率被执行环境放大了**，不代表服务整体不可用，更不代表 kimi 配置/代码有错。
+
+**定位法（一分钟分清"环境放大" vs "服务真宕"）**：
+1. **换非沙箱/直连环境**跑同一条裸命令（`kimi --model <m> -p 'hi' --output-format stream-json`）。
+2. 若**非沙箱通、沙箱挂** → 是宿主执行环境的网络，不是 kimi。把 kimi 调用放到**非受限网络**里跑（如关闭该 agent 的网络沙箱、放宽容器出网）。
+3. 若**非沙箱也挂** → 才是服务端/网络真波动，重试或等恢复。
+
+**工程兜底**：无论哪种，宿主 `subprocess` 调 kimi 都应对 `connection_error`/超时/`exit=75`/网关 5xx **自动重试 + 指数退避**（骑过短抖动）；受限网络下重试帮助有限，根治要换执行环境。
+
+> 一句话：`connection_error` 先怀疑**自己这侧的网络路径（沙箱/受限出网）**，再怀疑服务端——多数"间歇宕"是执行环境放大的假象。
+
+---
+
 ## 4. stream-json 输出解析（实战字段）
 
 `-p --output-format stream-json` 每行一个 JSON 对象。**官方未公开精确 schema**，以下是实测到的稳定字段，配合 prompt 里的 **JSON 契约**使用：

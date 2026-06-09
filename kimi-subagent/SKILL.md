@@ -62,7 +62,8 @@ kimi -p "<完整、自包含的任务描述>" \
 - 优先看**退出码**（0 成功，非 0 失败），再看 stdout 内容。退出码清单见 `references/headless-output.md`。
 - 用 `stream-json` 时，逐行解析；最后一条 assistant 消息通常是最终结论。
 - 失败常见原因：未登录（先 `kimi login`）、prompt 上下文不全、被静态 deny 策略拦截、模型/网络错误。
-- **宿主程序化集成（subprocess / cron / CI）的系统排错** —— PATH 找不到 kimi、v0.11 语法变更、headless 下 `auth.login_required`（OAuth vs API key 鉴权，含 cron 可用的配置写法）、stream-json 逐行解析实战 → `references/integration-troubleshooting.md`。
+- **反复 `provider.connection_error`（超时）别先怪服务**：curl 打端点秒回只到网关层，kimi 是到模型后端那跳超时；**宿主沙箱/受限出网会放大这个失败**（同一时刻沙箱挂、非沙箱通）。先换非沙箱/直连验证 → `references/integration-troubleshooting.md` 第 3d 节。
+- **宿主程序化集成（subprocess / cron / CI）的系统排错** —— PATH 找不到 kimi、v0.11 语法变更、headless 下 `auth.login_required`（OAuth vs API key 鉴权，含 cron 可用的配置写法）、代理大小写、connection_error 与沙箱、stream-json 逐行解析实战 → `references/integration-troubleshooting.md`。
 
 ## 7. 安全边界
 
