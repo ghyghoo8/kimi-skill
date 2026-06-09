@@ -145,6 +145,8 @@ env.setdefault("KIMI_CODE_HOME", os.path.join(os.path.expanduser("~"), ".kimi-co
 
 ## 3c. 代理：Node 的 fetch 只认**大写** `HTTPS_PROXY`（最隐蔽的坑）
 
+> ✅ **v0.12 起官方支持代理变量、大小写都认（含 SOCKS）**，本节这个坑已修复——v0.12 直接用小写 `https_proxy` 也能续期。**以下仅适用于 ≤v0.11**（或仍想显式控制时）。
+
 ⚠️ 需翻墙/代理出网的环境里，**最容易被误判成"OAuth 过期"的其实是代理没传到位**。
 
 **现象**：subprocess 调 datasource 报 `Kimi Code access_token has expired. Run /login again`，或 `kimi login` 报 `OAuth request to https://auth.kimi.com/api/oauth/token failed: fetch failed`。一看凭证——`access_token` 确实过期了，但 **`refresh_token` 还有效**（可解 JWT 看 `exp`，通常一个月）。照理 CLI 该用 refresh_token 静默续期，却续不了。

@@ -99,13 +99,14 @@ max_context_size = 1047576
 
 ### `[experimental]` — 实验特性开关
 
-| 字段 | 类型 | 默认 |
-|---|---|---|
-| `goal_command` | bool | `false` |
-| `micro_compaction` | bool | `false` |
-| `background_ask` | bool | `false` |
+**v0.12 起目前仅剩一个用户可见字段**（`goal_command` / `background_ask` / `sub_skill` 均已正式发布、移出实验）：
 
-可直接改或用 TUI `/experiments`。环境变量 `KIMI_CODE_EXPERIMENTAL_<NAME>` 优先。
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `micro_compaction` | bool | `true` | 清理较旧的大型工具结果、保留最近对话；仅在想关闭自动清理时设 `false` |
+
+可直接改或用 TUI `/experiments`；环境变量 `KIMI_CODE_EXPERIMENTAL_MICRO_COMPACTION` 优先。
+（≤v0.11 该表还有 `goal_command`/`background_ask`/`sub_skill`，默认 `false`；现已转正，见 `changelog.md`。）
 
 ### `[services]` — 内置服务
 

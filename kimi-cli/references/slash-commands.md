@@ -37,7 +37,9 @@
 | `/yolo [on\|off]`（`/yes`） | 切换 YOLO（跳过工具审批） |
 | `/auto [on\|off]` | 切换 auto 权限模式 |
 | `/plan [on\|off]` / `/plan clear` | 切换 Plan 模式 / 清除当前 plan |
-| `/goal [...]` | 目标模式（实验）：`status` / `pause` / `resume` / `cancel` / `replace <目标>` / `next <目标>` / `next manage` |
+| `/goal [...]` | 目标模式（v0.12 正式发布；≤v0.11 实验）：`status` / `pause` / `resume` / `cancel` / `replace <目标>` / `next <目标>` / `next manage` |
+| `/swarm on\|off` | 开/关 swarm 模式（多 agent 并行），不发提示词（v0.12 新增） |
+| `/swarm <任务>` | 先开 swarm，再把 `<任务>` 作为普通提示词发送 |
 
 ## 信息与状态
 

@@ -31,7 +31,7 @@ kimi upgrade        # 升级到最新
 kimi migrate        # 迁移旧版 kimi-cli 数据
 ```
 
-> 校准锚点 **v0.11.0（2026-06-05）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
+> 校准锚点 **v0.12.0（2026-06-09）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
 
 - 首次使用：进入后 `/login` 配置凭证（OAuth 设备码或 API key）。也可 `kimi login` 非交互登录。
 - Windows 需 Git for Windows；Git Bash 非默认路径时设 `KIMI_SHELL_PATH`。
@@ -57,7 +57,8 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 - **Plan 模式**：`Shift-Tab` 切换，或 `--plan` 启动 / `/plan`；`/plan clear` 清计划。先只读探索再行动。
 - **YOLO 模式**：`/yolo` 或 `-y`，跳过工具审批（仅 Plan 退出例外，谨慎）。
 - **Auto 模式**：`/auto` 或 `--auto`，工具自动放行但**禁止 agent 提问**，适合无人值守。
-- **Goal 模式（实验）**：`KIMI_CODE_EXPERIMENTAL_GOAL_COMMAND=1` 启用；`/goal <目标>` 跨多轮朝终态推进，`/goal next` 排队、`/goal pause|resume|cancel|replace`。`-p` 下仅创建目标，退出码 `0/3/6` → `references/interaction.md`。
+- **Goal 模式**：v0.12 起正式发布（≤v0.11 需 `KIMI_CODE_EXPERIMENTAL_GOAL_COMMAND=1`）。`/goal <目标>` 跨多轮朝终态推进，`/goal next` 排队、`/goal pause|resume|cancel|replace`。`-p` 下仅创建目标，退出码 `0/3/6` → `references/interaction.md`。
+- **`/swarm`（v0.12）**：多 agent 并行执行任务、实时进度。`/swarm on|off` 只开关、`/swarm <任务>` 开后直接派活。
 
 ## 4. 会话管理
 

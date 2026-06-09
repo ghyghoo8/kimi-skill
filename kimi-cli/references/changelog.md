@@ -2,16 +2,26 @@
 
 官方更新日志：https://www.kimi.com/code/docs/kimi-code/whats-new.html
 
-**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.11.0（发布 2026-06-05，核对 2026-06-08）。**
+**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.12.0（发布 2026-06-09，核对 2026-06-09）。**
 更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
 
 ## 各版本要点（新→旧）
+
+### v0.12.0 — 2026-06-09
+- **`/swarm`**：多 agent 并行执行任务，实时进度。
+- **代理支持**：`HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY` / `NO_PROXY` 及 SOCKS。
+- **Goal 模式 / 后台提问 / Sub-Skill 正式发布**（不再是实验特性）。
+- **Micro compaction 默认开启**（上下文优化）。
+- Homebrew 自动更新；`KIMI_CODE_HOME` 目录支持。
 
 ### v0.11.0 — 2026-06-05
 - 内置 Skills 直接作为斜杠命令出现，**无需 `skill:` 前缀**。
 - 新增实验性 **Sub-Skill 发现系统**（`sub-skill.review`、`sub-skill.consolidate`），用 `KIMI_CODE_EXPERIMENTAL_SUB_SKILL=1` 启用。
 - Goal 模式在 YOLO 下启动前会确认并建议切到 Auto。
 - 多个 Goal 队列 bug 修复。
+
+### v0.10.1 — 2026-06-04
+- 修复 TUI 启动 Goal 时的崩溃。
 
 ### v0.10.0 — 2026-06-04
 - Goal 排队：`/goal next <目标>` 安排后续任务。
@@ -44,4 +54,5 @@
 | `kimi provider` 子命令、Goal 模式 `/goal` | v0.8.0 |
 | `kimi acp`、`/btw` | v0.9.0 |
 | `kimi doctor`、`/reload`、`/experiments`、`/goal next`、内置 `update-config` | v0.10.0 |
-| 内置 Skills 免 `skill:` 前缀、Sub-Skill 发现（`KIMI_CODE_EXPERIMENTAL_SUB_SKILL`） | v0.11.0 |
+| 内置 Skills 免 `skill:` 前缀、Sub-Skill 发现（实验，`KIMI_CODE_EXPERIMENTAL_SUB_SKILL`） | v0.11.0 |
+| `/swarm` 多 agent 并行、代理支持（`*_PROXY`/SOCKS）、Goal/后台提问/Sub-Skill **转正**、micro compaction 默认开 | v0.12.0 |
