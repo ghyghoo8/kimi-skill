@@ -15,6 +15,8 @@
 | `/permission` | 选择权限模式 |
 | `/editor` | 配置 Ctrl-G 外部编辑器 |
 | `/theme` | 切换终端配色 |
+| `/custom-theme` | 交互生成自定义配色主题（JSON，只写想改的颜色）（v0.13） |
+| `/import-from-cc-codex` | 一键从 Claude Code / Codex 导入设置（v0.13） |
 
 ## 会话管理
 
@@ -24,8 +26,9 @@
 | `/sessions`（`/resume`） | 浏览并切换历史会话 |
 | `/tasks`（`/task`） | 查看后台任务列表 |
 | `/fork` | 基于当前会话分叉，保留完整历史 |
-| `/title [文本]`（`/rename`） | 显示/设置会话标题 |
+| `/title [文本]`（`/rename`） | 无参显示当前标题；带参设新标题（≤200 字符） |
 | `/compact [指令]` | 压缩上下文释放 token |
+| `/undo [次数]` | 从当前上下文撤销最近的提示词；不带参打开交互式选择器（v0.14） |
 | `/init` | 分析代码库并生成 `AGENTS.md` |
 | `/export-md [路径]`（`/export`） | 导出会话为 Markdown |
 | `/export-debug-zip` | 导出调试 ZIP |

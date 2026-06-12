@@ -86,6 +86,7 @@ timeout = 5
 | `SubagentStart` | 子 agent 名 | — | 子 agent 执行前触发 |
 | `SubagentStop` | 子 agent 名 | — | 子 agent 完成后观测 |
 | `StopFailure` | 错误类型 | — | 出错后观测 |
+| `Interrupt` | 空串 | — | **用户中断本轮（如按 `Esc`）时触发**（v0.14 新增）；超时/其它程序性中断不触发；中断时 `Stop` **不**触发、由它替代；payload 含 `reason`（观察用） |
 | `PreCompact` | `manual` / `auto` | — | 压缩前触发；返回值忽略 |
 | `PostCompact` | `manual` / `auto` | — | 压缩后观测 |
 | `Notification` | 通知类型（如 `task.completed`） | — | 后台任务状态变化观测 |

@@ -2,10 +2,21 @@
 
 官方更新日志：https://www.kimi.com/code/docs/kimi-code/whats-new.html
 
-**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.12.0（发布 2026-06-09，核对 2026-06-09）。**
+**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.14.0（发布 2026-06-10，核对 2026-06-10）。**
 更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
 
 ## 各版本要点（新→旧）
+
+### v0.14.0 — 2026-06-10
+- **`Interrupt` hook 事件**：用户中断本轮（如按 `Esc`）时触发；此时 `Stop` 不再触发、由它替代；payload 含 `reason`（观察用）。
+- `/undo` 不带参数 → 打开交互式选择器，按条挑要撤销的提示词。
+- 修复：OpenAI 兼容 Chat Completions 下工具输出的图片丢失。
+
+### v0.13.0 — 2026-06-10
+- 自定义配色主题（JSON，只写想改的颜色，其余沿用基准）；`/custom-theme` 交互生成。
+- `/import-from-cc-codex` 一键从 Claude Code / Codex 导入设置。
+- Marketplace 显示已装 plugin 的可用更新。
+- 修复：浏览器打不开时，设备登录仍保留可见的 URL 与验证码。
 
 ### v0.12.0 — 2026-06-09
 - **`/swarm`**：多 agent 并行执行任务，实时进度。
@@ -55,4 +66,6 @@
 | `kimi acp`、`/btw` | v0.9.0 |
 | `kimi doctor`、`/reload`、`/experiments`、`/goal next`、内置 `update-config` | v0.10.0 |
 | 内置 Skills 免 `skill:` 前缀、Sub-Skill 发现（实验，`KIMI_CODE_EXPERIMENTAL_SUB_SKILL`） | v0.11.0 |
-| `/swarm` 多 agent 并行、代理支持（`*_PROXY`/SOCKS）、Goal/后台提问/Sub-Skill **转正**、micro compaction 默认开 | v0.12.0 |
+| `/swarm` 多 agent 并行（自动重试限流）、代理支持（`*_PROXY`/SOCKS）、Goal/后台提问/Sub-Skill **转正**、micro compaction 默认开、`KIMI_CODE_HOME` 加载 Skills/全局指令 | v0.12.0 |
+| 自定义配色主题、`/custom-theme`、`/import-from-cc-codex`、Marketplace 显示插件更新 | v0.13.0 |
+| `Interrupt` hook 事件、`/undo` 交互式选择 | v0.14.0 |

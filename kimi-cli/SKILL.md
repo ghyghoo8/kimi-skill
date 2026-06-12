@@ -31,7 +31,7 @@ kimi upgrade        # 升级到最新
 kimi migrate        # 迁移旧版 kimi-cli 数据
 ```
 
-> 校准锚点 **v0.12.0（2026-06-09）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
+> 校准锚点 **v0.14.0（2026-06-10）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
 
 - 首次使用：进入后 `/login` 配置凭证（OAuth 设备码或 API key）。也可 `kimi login` 非交互登录。
 - Windows 需 Git for Windows；Git Bash 非默认路径时设 `KIMI_SHELL_PATH`。
@@ -70,7 +70,7 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 
 ## 5. 斜杠命令
 
-常用：`/help` `/model` `/status` `/usage` `/mcp` `/plugins` `/init`（生成 AGENTS.md）`/tasks` `/permission` `/settings`(`/config`)。完整清单与别名 → `references/slash-commands.md`。
+常用：`/help` `/model` `/status` `/usage` `/mcp` `/plugins` `/init`（生成 AGENTS.md）`/tasks` `/undo`（撤销最近提示词）`/permission` `/settings`(`/config`)。完整清单与别名 → `references/slash-commands.md`。
 
 ## 6. 插件与 MCP
 
