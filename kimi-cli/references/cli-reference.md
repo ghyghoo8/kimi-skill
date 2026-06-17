@@ -25,12 +25,11 @@
 
 ### Flag 互斥规则
 
-- `--continue` ↔ `--session`
-- `--yolo` ↔ `--auto`
-- `--yolo` / `--auto` 不能与 `--continue` 或 `--session` 同用
-- `--plan` 不能与 `--continue` 或 `--session` 同用
+- `--continue` ↔ `--session`（互斥）
+- `--yolo` ↔ `--auto`（互斥）
 - `--prompt` 不能与 `--yolo` / `--auto` / `--plan` 同用
 - `--output-format` 仅在有 `--prompt` 时有效
+- **v0.14.2 起**：`--auto` / `--yolo` / `--plan` **可**与 `--continue` / `--session` 同用——把该模式应用到续接的会话（旧版为互斥）。
 
 ### 非交互（`-p`）模式行为
 

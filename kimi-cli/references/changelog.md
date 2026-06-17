@@ -5,6 +5,12 @@
 **本仓库校准锚点：`@moonshot-ai/kimi-code` v0.16.0（发布 2026-06-16，核对 2026-06-17）。**
 更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
 
+> ⚠️ 官方 what's-new 只列 minor 版本、且会滞后。**patch 版本与权威细节看源码仓库** `apps/kimi-code/CHANGELOG.md`（`MoonshotAI/kimi-code`）。源码核对（2026-06-17）发现站点漏掉的：
+> - **Node 要求 24.15.0 → 22.19.0**（#622）。
+> - **v0.14.2（#683）：`--auto`/`--yolo`/`--plan` 现可与 `--session`/`--continue` 同用**（模式应用到续接会话；旧版互斥）。
+> - **v0.14.3（#713）**：打开模型选择器前刷新供应商模型元数据。
+> - datasource 插件 **v3.2.0**，装后不自动更新、需重装升级（#646）。
+
 ## 各版本要点（新→旧）
 
 ### v0.16.0 — 2026-06-16

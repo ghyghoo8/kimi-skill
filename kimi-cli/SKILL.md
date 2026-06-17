@@ -23,7 +23,7 @@ whenToUse: |
 curl -fsSL https://code.kimi.com/kimi-code/install.sh | bash         # macOS / Linux
 irm https://code.kimi.com/kimi-code/install.ps1 | iex                 # Windows PowerShell
 
-# 或 npm（需 Node ≥ 24.15.0）
+# 或 npm（需 Node ≥ 22.19.0）
 npm install -g @moonshot-ai/kimi-code      # 或 pnpm add -g @moonshot-ai/kimi-code
 
 kimi --version      # 验证
