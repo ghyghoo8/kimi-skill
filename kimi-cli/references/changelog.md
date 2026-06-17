@@ -2,10 +2,21 @@
 
 官方更新日志：https://www.kimi.com/code/docs/kimi-code/whats-new.html
 
-**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.14.0（发布 2026-06-10，核对 2026-06-10）。**
+**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.16.0（发布 2026-06-16，核对 2026-06-17）。**
 更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
 
 ## 各版本要点（新→旧）
+
+### v0.16.0 — 2026-06-16
+- **`kimi vis`**：内置会话可视化工具，浏览器里直观查看一次会话全过程；支持 `--port`/`--host`、`--no-open`、`kimi vis <sessionId>` 深链。
+- 防止 Anthropic 兼容供应商读取 Anthropic 的 shell 凭证。
+- 修复：上下文超过阻断阈值时的重复压缩。
+
+### v0.15.0 — 2026-06-15
+- 全会话选择器：跨工作目录、按名称搜索、分页浏览；可为其它目录的会话生成可恢复命令。
+- 推理过程跟随用户语言（代码/术语保留）。
+- **MCP 新增对旧式 SSE 服务器的支持**（与 stdio、streamable HTTP 并存）。
+- 窄终端下 TUI 组件自动折行/压缩/截断超宽内容。
 
 ### v0.14.0 — 2026-06-10
 - **`Interrupt` hook 事件**：用户中断本轮（如按 `Esc`）时触发；此时 `Stop` 不再触发、由它替代；payload 含 `reason`（观察用）。
@@ -69,3 +80,5 @@
 | `/swarm` 多 agent 并行（自动重试限流）、代理支持（`*_PROXY`/SOCKS）、Goal/后台提问/Sub-Skill **转正**、micro compaction 默认开、`KIMI_CODE_HOME` 加载 Skills/全局指令 | v0.12.0 |
 | 自定义配色主题、`/custom-theme`、`/import-from-cc-codex`、Marketplace 显示插件更新 | v0.13.0 |
 | `Interrupt` hook 事件、`/undo` 交互式选择 | v0.14.0 |
+| 全会话选择器（跨目录/搜索/分页）、MCP 旧式 SSE 支持、推理跟随用户语言 | v0.15.0 |
+| `kimi vis` 会话可视化、阻止 Anthropic 兼容供应商读 shell 凭证 | v0.16.0 |

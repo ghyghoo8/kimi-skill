@@ -51,6 +51,7 @@
 | `kimi migrate` | 迁移旧版 kimi-cli 数据到 kimi-code |
 | `kimi upgrade` | 检查并安装更新 |
 | `kimi provider <action>` | 供应商管理（见下） |
+| `kimi vis [id]` | 会话可视化（浏览器，v0.16，见下） |
 
 ### `kimi login`
 
@@ -94,6 +95,23 @@ Shell 内管理供应商，等价于非交互的 TUI `/provider`。
 | `provider list` | 每行打印一个已配供应商（类型/模型数/来源）；加 `--json` 输出原始 `providers`/`models` 表 |
 | `provider catalog list [providerId]` | 浏览 models.dev 公共目录而不改配置。`--filter <子串>`（对 id/name 不区分大小写）、`--url <url>`（默认 `https://models.dev/api.json`）、`--json` |
 | `provider catalog add <providerId>` | 按 id 直接导入已知供应商（如 `anthropic`/`openai`）。`--api-key <key>`（或 `KIMI_REGISTRY_API_KEY`）、`--default-model <modelId>`（导入后设 `default_model` 为 `<providerId>/<modelId>`）、`--url <url>` |
+
+### `kimi vis [sessionId] [options]`（v0.16）
+
+启动**会话可视化工具**，在浏览器里直观查看一次会话全过程。命令在进程内起一个指向本地会话的服务、打印访问地址、打开浏览器，持续运行到 `Ctrl-C`。
+
+| 参数 | 说明 |
+|---|---|
+| `sessionId` | 可选；打开指定会话的可视化页，省略则显示列出全部会话的首页 |
+| `--port <number>` | 绑定端口，默认自动选空闲端口 |
+| `--host <host>` | 绑定主机，默认 `127.0.0.1` |
+| `--no-open` | 不自动开浏览器，仅打印访问 URL |
+
+```sh
+kimi vis                                  # 开首页
+kimi vis 01HZ...XYZ                       # 直接开某会话
+kimi vis --host 0.0.0.0 --port 8123 --no-open
+```
 
 ## 环境变量（常用）
 

@@ -9,7 +9,7 @@
 - 二者首次运行自动创建。`KIMI_CODE_HOME` 可改基目录 → `$KIMI_CODE_HOME/config.toml`、`$KIMI_CODE_HOME/tui.toml`。
 - TOML 语法：字段用 snake_case；含 `.` 的键名要加引号（如 `[models."gpt-4.1"]`）。
 - **凭证只从 `config.toml` 读**：shell 里的 `export KIMI_API_KEY=...` 不会自动注入供应商。
-- **MCP 不在此**：MCP 服务器配在 `~/.kimi-code/mcp.json` 或项目级 `.kimi-code/mcp.json`。
+- **MCP 不在此**：MCP 服务器配在 `~/.kimi-code/mcp.json` 或项目级 `.kimi-code/mcp.json`（schema、stdio/HTTP/SSE 接入见 `mcp.md`）。
 - `kimi doctor` 校验合法性；`/reload-tui` 只重载 `tui.toml`，`/reload` 两者都重载。
 
 ---
