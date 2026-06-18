@@ -1,116 +1,98 @@
 ---
 name: kimi-datasource
 description: |
-  kimi-datasource 是 Kimi Code 官方数据插件：用自然语言直接查金融行情（A股/港股/美股、宏观经济）、
-  企业工商信息、学术文献，无需手写 API。用户问个股最新价/涨跌幅/技术指标、宏观 GDP/CPI、
-  公司股权/风险、论文检索等数据类问题时进此 Skill。
+  kimi-datasource 是 Kimi Code 的数据网关（金融行情/财报、企业工商股权、宏观、学术）。本 Skill 基于
+  插件源码逆向，教你**直连网关 HTTP**（`POST api.kimi.com/coding/v1/tools`）用静态 API key 取结构化数据，
+  绕开 OAuth 15 分钟过期 + `kimi -p` LLM 中转。也涵盖在 CLI 里用自然语言问数。
 whenToUse: |
-  查金融数据（股票实时/历史行情、MACD/KDJ/RSI 技术指标、财报、选股、指数；World Bank 宏观经济）；
-  查企业工商信息（注册/股权/法律风险/关联公司）；查学术文献（多库论文检索、引用、预印本）；
-  安装/启用 kimi-datasource 插件、用 /plugins Marketplace、登录凭据问题。
+  程序化/批量取金融数据（A股/港股/美股行情、技术指标、财报三表、股东、主营分部、选股、宏观 World Bank）；
+  取企业工商/股权/实控人/司法风险（系统盲区）；取学术文献（arxiv/scholar）；
+  想绕开 OAuth 登录态/15min token 过期、想要结构化原始字段而非 LLM 整理后的文本时。
 ---
 
-# kimi-datasource 插件
+# kimi-datasource 数据网关（源码逆向版）
 
-`kimi-datasource` 是 **Kimi Code 官方数据插件**：让你用**自然语言**直接查询金融行情、宏观经济、
-企业工商与学术文献等数据，**无需手动调用 API**。插件依赖本地凭据访问数据服务，按次计费。
+> **本 Skill 基于插件源码逆向，不再依据官方使用说明。** 官方文档把它讲成"自然语言问数的黑盒插件"，
+> 但源码显示它只是 **Kimi Code 网关 HTTP 端点的薄封装**——可直接 HTTP 调用，拿结构化数据。
+> 重新逆向方法 + 完整 API 目录见 [references/gateway-api.md](references/gateway-api.md)。
 
-> 官方文档：https://www.kimi.com/code/docs/kimi-code-cli/customization/datasource.html
+## 一句话本质
 
-## 前置：登录
+`kimi-datasource` 插件（`scripts/query_stock.py` / `bin/kimi-datasource.mjs`）= 读凭证 → `POST https://api.kimi.com/coding/v1/tools`，body `{"method": ..., "params": ...}`，带 `Authorization: Bearer <token>` + 一组 `X-Msh-*` 头。**没有任何本地数据逻辑，全在网关后端。** 所以宿主程序可以**完全甩开插件/CLI，自己直连网关**。
 
-插件依赖本地 Kimi 凭据访问数据服务，**使用前必须先 OAuth 登录**：
+## 鉴权真相（源码实测，纠正官方"必须 OAuth"的说法）🔴
 
-```text
-/login        # 用 Kimi Code 账号完成 OAuth 登录
+网关 **同时接受两种 Bearer 凭证**：
+
+| 凭证 | 形态 | 寿命 | 来源 |
+|---|---|---|---|
+| **静态 API key**（推荐程序化用）| `sk-kimi-...` | **永不过期** | `config.toml` 的 `api_key` / 环境变量 `KIMI_API_KEY` |
+| OAuth access_token | JWT | **15 分钟**（陷阱）| `~/.kimi-code/credentials/kimi-code.json`，`kimi login` 写入 |
+
+- **官方/managed 插件用 OAuth JWT，且源码里显式校验 `expires_at` 过期就抛 `access_token expired`**——这就是 headless/subprocess 下"登录后只有 15 分钟可用、之后全失败"的根因（refresh_token 虽有效，但非交互态不触发静默续期）。
+- **直连网关时改用静态 API key（`Bearer sk-kimi-...`）即可彻底规避**：永不过期、不依赖 `kimi login`、不需要 `KIMI_CODE_HOME`、不需要代理可达 `auth.kimi.com`。
+
+## 三个网关 method
+
+| method | 用途 |
+|---|---|
+| `get_stock_realtime_price` | 直查 A股/港股 实时价 + 分钟线 / 技术指标（legacy 直达接口）|
+| `get_data_source_desc` | 取某数据源的 API 目录（参数 `{"name": "<源名>"}`）|
+| `call_data_source_tool` | 通用调度：`{"data_source_name", "api_name", "params"}` 调任意源的任意 API |
+
+## 七个数据源（`get_data_source_desc` 的 enum）
+
+`stock_finance_data`（金融：行情/财报/股东/主营/选股）· `tianyancha`（天眼查：工商/股权/司法，226 API）· `yahoo_finance` · `world_bank_open_data`（宏观）· `arxiv` · `scholar` · `yuandian_law`
+
+> **取个股工商/实控人**：`stock_finance_data_get_stock_info(ticker)` 最省事（用 ticker，直接给实控人/控股股东/股权比例/经营范围）；只有不知道公司全称时才用 `tianyancha`。
+
+## 最小直连示例（Python，零依赖）
+
+```python
+import json, urllib.request, uuid, os
+KEY = os.environ["KIMI_API_KEY"]                    # sk-kimi-...，永不过期
+def gw(method, params):
+    body = json.dumps({"method": method, "params": params}).encode()
+    hdr = {"Authorization": f"Bearer {KEY}", "Content-Type": "application/json",
+           "X-Msh-Tool-Call-Id": str(uuid.uuid4()), "X-Msh-Platform": "kimi_cli",
+           "X-Msh-Version": "kimi-datasource", "X-Msh-Device-Id": "kimi-datasource",
+           "User-Agent": "kimi-datasource/2.0"}
+    req = urllib.request.Request("https://api.kimi.com/coding/v1/tools",
+                                 data=body, headers=hdr, method="POST")
+    return json.loads(urllib.request.urlopen(req, timeout=30).read())
+
+# 财报（显式报告期，避免"选错最近一期"）
+gw("call_data_source_tool", {"data_source_name": "stock_finance_data",
+   "api_name": "stock_finance_data_get_financial_statements",
+   "params": {"ticker": "601225.SH", "statement": "all",
+              "financial_parameter": "20241231", "file_path": "/tmp/fs.csv",
+              "format": "json"}})
 ```
 
-## 安装
+返回 `{"is_success": true, "result": {"user": [{"type":"text","text": "<JSON: data_preview=CSV>"}], ...}}`，
+原始字段是同花顺 iFinD 口径（`ths_*_stock`，如 `ths_roe_stock` ROE、`ths_net_sales_rate_stock` 净利率）。
+完整字段表 + 各 API 参数见 [references/gateway-api.md](references/gateway-api.md)。
 
-通过内置插件市场安装（不再用 zip URL）：
+## 何时直连 vs 何时走 CLI 自然语言
 
-```text
-/plugins              # 打开插件管理器
-  → Marketplace       # 选择市场
-  → 找到并安装 Kimi Datasource
-/new                  # 新建会话后即可使用
-```
+- **直连网关 HTTP（首选程序化/批量/系统集成）**：要结构化原始数据、要稳定、要免 token 过期、要显式传报告期。**就是上面的写法。**
+- **CLI 自然语言（`kimi -p "查..."`）**：人在终端临时问、或需要 LLM 跨源编排+总结。代价：按次计费 + LLM 中转可能选错报告期 + OAuth 15min 过期。见下方"坑"。
 
-> 当前最新插件版本 **v3.2.0**（截至 2026-06-17）。**插件装后不会自动更新**——升级需在 `/plugins` 里**重新执行上述安装步骤**。
+## 程序化调用的两个老坑（直连可同时规避）
 
-## 能力总览（四大类数据）
+1. **自然语言查"最近一期"会选错报告期** 🔴：经 LLM 中转时 agent 常把报告期设成去年同期还自称"最新"。→ **直连时显式传 `financial_parameter=20260331`**，根治。
+2. **`text` 输出是 LLM 整理后文字**，带认知偏差。→ 直连拿 `result.user[].text` 里的原始 CSV/JSON，不经 LLM 润色。
 
-### 1. 金融数据
+## 使用规范
 
-- **股票 & 全球市场**：A 股 / 港股 / 美股的实时行情、历史价格、技术指标
-  （MACD、KDJ、RSI、BOLL、MA 等）、财务报表、公司基本面、选股、指数数据、自选股管理。
-- **宏观经济**：World Bank 开放数据，覆盖 **189 个成员国、50+ 年历史**——
-  GDP、CPI、贸易、失业、贫困、教育、气候等指标，支持跨国对比。
+1. **只读**：仅查询，无写入/交易。
+2. **静态 key 计费**：仍消耗账号额度（按次），但免登录态烦恼。
+3. **核对标的**：A股 `.SH/.SZ/.BJ`、港股 `.HK`、美股 `.O/.N/.A`；先确认代码不要凭记忆猜。
+4. **实时数据受交易时段限制**：盘后改查收盘/历史。
+5. **免责**：AI/数据输出仅供参考，不构成投资建议。
 
-### 2. 企业数据
+## 维护：这是源码逆向的 Skill
 
-覆盖中国大陆企业：工商注册信息、股权结构、法律风险、关联公司图谱。
+**本 Skill 内容来自逆向插件源码与实测网关，不再跟随官方使用说明。** 升级/校验方法（端点、method、数据源 enum、API 参数变了怎么办）见 [references/gateway-api.md](references/gateway-api.md) 末节「如何重新逆向校验」。
 
-### 3. 学术数据
-
-多数据库整合，涵盖物理、数学、计算机、金融、经济等领域的数百万篇论文，
-支持文献检索、引用查询、预印本获取。
-
-## 使用方式：自然语言提问
-
-装好后直接用自然语言问，插件自动查数、整理结果。示例：
-
-```text
-# 金融
-"贵州茅台过去一年的最高价和最低价分别是多少？"
-"对比腾讯和阿里最近三年的营收。"
-"帮我筛选市盈率低于 15、ROE 大于 20% 的白酒股。"
-"中国和美国近十年的 GDP 增速对比。"
-
-# 企业
-"查一下某公司的股权结构和实际控制人。"
-"这家公司有哪些法律风险和关联企业？"
-
-# 学术
-"找几篇近两年关于大模型推理优化的论文，并给出引用情况。"
-```
-
-## 使用规范与限制
-
-1. **先登录**：未 `/login` 会因缺少本地凭据而无法访问数据。
-2. **按次计费**：每次数据查询消耗 Kimi Code 账号额度。
-3. **只读**：仅查询，无写入 / 交易能力。
-4. **实时数据受交易时段限制**：技术指标与实时行情仅在交易时段可取；盘后查实时数据可能拿不到，
-   改查收盘/历史数据。
-5. **核对标的**：用中文名提问时先确认正确的股票代码与市场后缀，不要凭记忆猜。
-6. **免责声明**：AI 输出仅供参考，**不构成任何投资或商业决策建议**。
-
-## 故障排查
-
-| 现象 | 原因 | 解决 |
-|------|------|------|
-| 提示找不到凭据 / 未授权 | 未登录 | `/login` 完成 OAuth |
-| 插件命令不可用 | 未安装或未新建会话 | `/plugins` → Marketplace 安装，再 `/new` |
-| 实时行情取不到数据 | 非交易时段查实时 | 改查收盘 / 历史数据，或等开盘 |
-| 提示额度不足 | 账号额度耗尽 | 充值 / 检查 Kimi Code 账号额度 |
-| `access_token expired` / `login failed: fetch failed`，但 refresh_token 没过期（代理环境）| Node 只认大写 `HTTPS_PROXY`，shell 只导出小写 → 够不到 `auth.kimi.com` 续期 | 显式给大写 `HTTPS_PROXY=...`；详见 troubleshooting 第 3c 节 |
-
-## 程序化 / 批量调用的关键坑
-
-> 适用于宿主程序（subprocess / 另一个 agent）调本插件取**结构化数据**，而非人在终端问答。
-
-**1. 自然语言查"最近一期"会选错报告期** 🔴
-本插件经 LLM agent 调用底层数据工具。问"最近一期财报"时，agent 常因**时间认知错位**把报告期设成**去年同期**（如实际最新是 2026Q1，却查了 `20250331`），还会在文本里说"这是目前可获取的最近一期"——**数据源其实有最新数据，是 agent 选错了查询参数**。
-- ✅ **显式给报告期**：prompt 里写明"用 `financial_parameter=20260331` 查 2026 一季报"，agent 就会传对。
-- 不要依赖 agent 自己判断"最新"。
-
-**2. 用 stream-json 拿工具原始返回，绕过 LLM 整理**
-默认 `text` 输出是 agent **整理润色后**的文字，可能带它的认知偏差。要可靠结构化数据，用 `-p --output-format stream-json`，从**工具结果消息**（含 `tool_call_id` 的那条）里取数据源原始 CSV/JSON（字段如 `ths_net_sales_rate_stock` 净利率、`ths_gross_selling_rate_stock` 毛利率、`ths_roe_stock` 等），数据精确、不被文本层污染。解析见 [../kimi-subagent/references/integration-troubleshooting.md](../kimi-subagent/references/integration-troubleshooting.md)（第 4 节 stream-json 解析）。
-
-**3. 鉴权是「两套」：LLM 用 API key，数据服务必须 OAuth + `KIMI_CODE_HOME`** 🔴
-- **LLM 推理**：可用 API key（`kimi-apikey` model），免 OAuth 登录态在 subprocess 下失效。
-- **本插件的数据服务**：**必须 OAuth 凭证**（先在交互端 `/login` 写入凭证文件），API key **替代不了**。subprocess 调用还要注入 **`KIMI_CODE_HOME=~/.kimi-code`** 让插件定位凭证文件，否则即使 LLM 通了、数据工具仍报 `provider.connection_error`。
-- 配好后两套鉴权各司其职即可调通。详见 [../kimi-subagent/references/integration-troubleshooting.md](../kimi-subagent/references/integration-troubleshooting.md)（第 3 节 API key + 第 3b 节 `KIMI_CODE_HOME`）。
-
-**4. 批量**
-一次可查多只（实测 5 只 OK，不止旧版 3 只上限），但：① 每只仍受"选错报告期"影响——批量更要显式传参；② **按次计费 × N**；③ 速度约每只数秒，几百只会很慢。**大批量历史/财报建议用专用结构化数据源（如 BaoStock）；本插件更适合按需 / 小批量 + 系统盲区（企业工商 / 股权 / 跨国宏观 / 学术）。**
+> 权威来源（仅供交叉验证，不作为 Skill 主依据）：插件源码 `~/.kimi-code/plugins/managed/kimi-datasource/bin/kimi-datasource.mjs`；官方文档 https://www.kimi.com/code/docs/kimi-code-cli/customization/datasource.html

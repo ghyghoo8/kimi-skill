@@ -38,7 +38,7 @@ whenToUse: |
 - `kimi-subagent` — 宿主把 `kimi` 当子 agent：`kimi -p`、`--output-format stream-json`、传上下文、并发委派、多轮、输出解析、退出码。
 - `kimi-cli` — Node 版 Kimi Code CLI 交互用法、完整 flag、会话、斜杠命令、插件/MCP、安装升级。
 - `kimi-api` — Kimi 开放平台 API、模型列表、Tool Calls、流式。
-- `kimi-datasource` — 官方数据插件，自然语言查金融（股票/宏观）、企业工商、学术文献数据。
+- `kimi-datasource` — 数据网关（源码逆向）：直连 HTTP 用静态 API key 取金融（股票/财报/宏观）、企业工商、学术结构化数据，绕开 OAuth 15min 过期；也含 CLI 自然语言问数。
 
 ## 官方文档
 
