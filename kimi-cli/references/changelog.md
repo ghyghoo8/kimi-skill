@@ -13,6 +13,11 @@
 
 ## 各版本要点（新→旧）
 
+### unreleased / main（尚未发版，截至 2026-06-23）
+> 源码 `origin/main` 已合入但 `apps/kimi-code/CHANGELOG.md` 顶部仍是 v0.19.1，**无发布日期，勿当已发布**。
+- **#999**：`--continue` 主短从 `-C` 改为 `-c`（`-C` 降为隐藏别名）。已在 `cli-reference.md` 标注「unreleased/main」，发版后转正。
+- 其余 main 增量（todo 列表 `Ctrl+T` 展开、bash 命令运行时展开、web ConversationToc 重构等）均为 TUI/web 交互项，**超出 subagent 底座范围**，不展开。
+
 ### v0.19.1 — 2026-06-23
 - 修复：ACP 编辑器（如 Zed）无法新建 thread；归档/删除会话时清空其全部状态；web 侧栏未读点跨标签同步。
 

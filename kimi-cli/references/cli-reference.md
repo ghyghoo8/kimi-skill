@@ -11,7 +11,7 @@
 | `--version` | `-V` | 显示版本并退出 |
 | `--help` | `-h` | 帮助信息 |
 | `--session [id]` | `-S` | 续接指定 id 会话，或交互式选择 |
-| `--continue` | `-c` | 续接当前目录最近会话（v0.19.1 起主短为 `-c`；`-C` 仍是隐藏别名） |
+| `--continue` | `-c` | 续接当前目录最近会话（**unreleased/main**：#999 把主短从 `-C` 改为 `-c`，`-C` 降为隐藏别名；截至 v0.19.1 仍是 `-C`） |
 | `--model <model>` | `-m` | 指定本次启动模型别名；缺省取 config 的 `default_model` |
 | `--prompt <prompt>` | `-p` | 非交互单条执行；流式输出到 stdout，不开 TUI |
 | `--output-format <fmt>` | — | `text`（默认，transcript 样式）或 `stream-json`（JSONL）；**仅配合 `-p`**。调用方要结构化数据看下方 |
@@ -19,10 +19,9 @@
 | `--auto` | — | auto 权限模式启动；工具自动处理，无需用户确认 |
 | `--plan` | — | 以 Plan 模式开新会话；先用只读工具探索 |
 | `--skills-dir <dir>` | — | 从指定目录加载 Skills，**替代自动发现**（可重复） |
-| `--work-dir <dir>` | `-w` | 工作目录 |
 | `--add-dir <dir>` | — | 为本次会话添加额外工作目录；相对路径按 cwd 解析；**可重复**（v0.19） |
 
-**隐藏别名**：`-r` / `--resume` ＝ `--session`；`--yes` / `--auto-approve` ＝ `--yolo`；`-C` ＝ `--continue`（旧主短，现 `-c`）。
+**隐藏别名**：`-r` / `--resume` ＝ `--session`；`--yes` / `--auto-approve` ＝ `--yolo`；`-C` ＝ `--continue`（截至 v0.19.1 仍是主短；**unreleased/main** #999 改主短为 `-c`、`-C` 降为别名）。
 
 ### Flag 互斥规则
 
@@ -57,10 +56,6 @@
 ### `kimi login`
 
 RFC 8628 设备码流程，不进 TUI。验证 URL 与 user code 打印到 **stderr**，轮询直到浏览器授权完成；token 写入与 TUI `/login` 相同位置。无 flag。成功退出码 0，取消/失败 1。
-
-### `kimi acp`
-
-ACP（Agent Client Protocol）模式，经 stdin/stdout 用 JSON-RPC 与 IDE 通信，通常由 IDE 自动拉起。无 flag。
 
 ### `kimi doctor [subcommand] [path]`
 
