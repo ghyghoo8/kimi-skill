@@ -1,158 +1,52 @@
-# 交互 · 会话 · Goal 模式
+# 会话与交互（subagent 底座相关部分）
 
-依据官方指南：
-- interaction：https://www.kimi.com/code/docs/kimi-code-cli/guides/interaction.html
-- sessions：https://www.kimi.com/code/docs/kimi-code-cli/guides/sessions.html
-- goals：https://www.kimi.com/code/docs/kimi-code-cli/guides/goals.html
-- use-cases：https://www.kimi.com/code/docs/kimi-code-cli/guides/use-cases.html
+> 本仓库定位「kimi 做 subagent 底座」。本文只保留与**多轮委派 / headless** 相关的部分；
+> 纯交互式 TUI 用法（按键、贴图、外部编辑器、审批面板操作、Goal 队列管理、典型用例等）**超出范围、仅在文末标记**。
+> 完整交互指南见官方 `guides/interaction`、`guides/sessions`、`guides/goals`。
 
-## 一、TUI 交互与按键
+## 一、会话管理（多轮委派核心）
 
-TUI 三区：输入框、对话视图、状态栏。
-
-### 输入与历史
-
-| 键 | 作用 |
-|---|---|
-| `Enter` | 发送消息 |
-| `Shift-Enter` / `Ctrl-J` | 换行（多行输入） |
-| `↑` / `↓` | 浏览输入历史（输入框为空时） |
-| `Ctrl-D` | 退出（输入框为空时） |
-| `Ctrl-C` ×2 | 空闲时连按两次退出 |
-| `/exit` | 退出 |
-
-### 媒体与文件引用
-
-- **粘贴图片/视频**：`Ctrl-V`（macOS/Linux）/ `Alt-V`（Windows）。输入框出现占位符，提交时自动替换为内容。依赖模型多模态能力（`image_in`/`video_in`）。
-- **文件引用**：输入 `@` 触发路径补全，插入相对路径并自动加载文件内容。隐藏目录（`.` 开头）要显式输入，如 `@.github/`。
-
-### 斜杠命令与 Skills
-
-- `/` 开头触发自动补全菜单。外部 skill 显示为 `/skill:<name>`（无命名冲突时可 `/<name>`）；内置 skill 直接 `/<name>`。
-- 流式输出中多数命令不可用，先 `Esc` 打断；但 `/yolo` `/plan` `/help` `/btw` 等模式/常用命令**始终可用**。
-
-### 流式输出中
-
-| 键 | 作用 |
-|---|---|
-| `Ctrl-S` | 把输入框内容**立即插入**当前轮次 |
-| `Esc` / `Ctrl-C` | 打断当前轮次（不退出） |
-| `Ctrl-O` | 全局折叠/展开工具输出 |
-| `Ctrl-B` | 把长跑的前台命令/子 agent 转后台，在 `/tasks` 面板查看（v0.19） |
-
-### 审批面板
-
-有副作用的工具调用（写文件、执行命令）弹审批面板：方向键导航，`Enter` 或数字键 `1`/`2`/`3` 确认，`Esc`/`Ctrl-C`/`Ctrl-D` 拒绝。「本会话内允许」自动放行同类调用；永久规则写配置文件（见 `config-files.md` 的 `[[permission.rules]]`）。
-
-### 外部编辑器
-
-`Ctrl-G` 打开外部编辑器编辑输入；保存则回填输入框，未保存则丢弃。优先级：`tui.toml` 的 `[editor].command` ＞ `$VISUAL` ＞ `$EDITOR`。
-
-## 二、模式切换
-
-| 模式 | 开启 | 行为 |
-|---|---|---|
-| **Plan** | `Shift-Tab` / `/plan` / `--plan` | 先产出行动计划，须批准才执行；`/plan clear` 清计划（仅空闲时） |
-| **YOLO** | `/yolo` / `-y` | 跳过工具审批（**仅 Plan 退出例外**）。⚠️ 仅可信目录 |
-| **Auto** | `/auto` / `--auto` | 自动处理审批但**禁止 agent 向用户提问**，适合无人值守 |
-
-## 三、会话管理
-
-CLI 把每次对话持久化为一个「会话」，保留消息历史与元数据，可关终端后再续。
+CLI 把每次对话持久化为「会话」，可关终端后再续——这是宿主对同一子任务做**多轮 headless 委派**的基础。
 
 ### 存储（按工作目录分组）
 
 ```
 ~/.kimi-code/
-├── session_index.jsonl          # 会话索引
+├── session_index.jsonl          # 会话索引（sessionId, sessionDir, workDir）
 └── sessions/
     └── <workDirKey>/<sessionId>/
         ├── state.json           # 标题、创建时间等元数据
         └── agents/*/wire.jsonl  # Agent 事件流，用于恢复与回放
 ```
 
-> 每个项目目录维护独立会话历史。**勿手动编辑 `sessions/` 下文件**，否则可能无法恢复。
+> 每个项目目录独立会话历史。**勿手动编辑 `sessions/`**，否则可能无法恢复。需要解析子 agent 产物时读 `wire.jsonl`（结构见 `../../kimi-subagent/references/headless-output.md`）。
 
-### 创建 / 续接
+### 创建 / 续接（headless 多轮）
 
 - `kimi`：每次直接启动都新建会话。
-- `kimi --continue`（`-c`，v0.19.1 起主短；`-C` 仍是隐藏别名）：续接当前目录最近会话。
-- `kimi --session <id>`（`-S`）：续接指定 id。
-- `kimi --session`：交互式会话浏览器（v0.15 起**跨工作目录**、可按名称搜索、分页；并能为其它目录的会话生成可恢复命令）。
-- 互斥：`-c` ↔ `-S`。（v0.14.2 起 `--auto`/`--yolo`/`--plan` **可**与 `-c`/`-S` 同用，模式应用到续接会话。）
+- `kimi -c`（`--continue`，v0.19.1 起主短；`-C` 隐藏别名）：续接当前目录最近会话。
+- `kimi -S <id>`（`--session`）：续接指定 id。第一次 `kimi -p` 拿到 session id 后，用 `-S <id> -p "追加要求"` 多轮委派。
+- 互斥：`-c` ↔ `-S`。v0.14.2 起 `--auto`/`--yolo`/`--plan` **可**与 `-c`/`-S` 同用（模式应用到续接会话）。
+- `--add-dir <path>`（可重复）：给委派的 kimi 加工作目录外的目录；选「记住」写项目级 `.kimi-code/local.toml`。
 
-> ⚠️ 可视化 / Web 模式（`kimi vis`、`kimi web`/`/web`、`kimi server`）面向交互式使用，与 subagent 底座定位无关，本仓库仅标记不展开。
+### 压缩 / 分叉 / 导出
 
-### 额外工作目录（v0.19）
+- `/compact [指令]`：上下文接近上限时压缩（长链路委派省 token）；micro-compaction v0.12 起默认开。
+- `/fork`：派生独立副本（已存目标不带入）。
+- `kimi export <id> [-o <path>]` / `/export-debug-zip`：打包会话，便于排查一次委派全过程。⚠️ 导出可能含敏感信息。
 
-`/add-dir <path>`（会话内）或 `kimi --add-dir <path>`（启动，可重复）添加工作目录外的目录；选「记住」写入项目级 `.kimi-code/local.toml`。委派 kimi 处理跨目录任务时有用。
+## 二、Goal 模式（仅 headless 相关）
 
-### 会话内斜杠命令（空闲时）
+让 kimi 跨多轮朝**可验证终态**推进。v0.12 起正式发布（≤v0.11 需 `KIMI_CODE_EXPERIMENTAL_GOAL_COMMAND=1`）。
 
-| 命令（别名） | 作用 |
-|---|---|
-| `/new`（`/clear`） | 切到新会话，丢弃当前上下文 |
-| `/sessions`（`/resume`） | 浏览并恢复历史会话 |
-| `/fork` | 派生当前会话；两份彼此独立。**已存目标不带入派生会话** |
-| `/title <text>`（`/rename`） | 设标题；无参则显示当前标题 |
-| `/compact [指令]` | 上下文接近上限时自动压缩；手动可带指令，如 `/compact 保留与数据库迁移相关的讨论` |
-| `/undo [次数]` | 撤销最近的提示词；不带参打开交互式选择器（v0.14） |
+- **`-p` 下只支持「创建目标」**，退出码:`0` 完成 / `3` 受阻 / `6` 暂停（见 `../../kimi-subagent/references/headless-output.md`）。宿主可据退出码判断委派结果。
+- 交互式管理（`/goal status|pause|resume|cancel|replace|next` 等）属 TUI 操作，超出本仓库范围。
 
-### 导出
+## 三、交互式 TUI 功能（超出范围，仅标记）
 
-- `kimi export <sessionId>`；`-o <path>` 指定输出。
-- `/export-debug-zip`：等同 `kimi export` 的调试 ZIP。
-- `/export-md`（`/export`）：导出 Markdown，默认 `kimi-export-<short-id>-<timestamp>.md`。
-- ⚠️ 导出文件可能含代码、命令输出、路径等敏感信息。
+以下面向人在终端交互，与 subagent 底座无关，**不展开**——需要时查官方 `guides/interaction`：
 
-## 四、Goal 模式
-
-让 kimi 跨多轮朝**明确终态**推进（如「修完所有失败测试」「定位并解决构建失败根因」）。目标应给出可验证的完成判据。
-
-### 开启
-
-- **v0.12.0+：已正式发布**，直接 `kimi` 后用 `/goal` 即可，无需实验开关。
-- **≤v0.11：实验特性**，需 `KIMI_CODE_EXPERIMENTAL_GOAL_COMMAND=1 kimi`（或 config.toml `[experimental].goal_command = true`）。
-
-### 命令
-
-```
-/goal 修复项目 GitHub issues 中列出的 bug
-```
-
-| 命令 | 作用 |
-|---|---|
-| `/goal` 或 `/goal status` | 显示当前目标与进度 |
-| `/goal pause` | 暂停（不删除） |
-| `/goal resume` | 继续暂停/受阻的目标 |
-| `/goal cancel` | 删除当前目标 |
-| `/goal replace <目标>` | 替换当前目标 |
-| `/goal next <目标>` | 排队后续目标（不打断当前），如 `/goal next 测试通过后更新发布说明` |
-| `/goal next manage` | 交互管理队列：方向键导航，Space 选，E 改，D 删，Esc 取消；Shift-Enter/Ctrl-J 换行，Enter 保存 |
-
-### 终态
-
-- **完成**：kimi 自动清除目标。
-- **暂停**：用户暂停、打断轮次、或恢复了旧会话。
-- **受阻**：需用户输入 / 无法达成 / 超预算 / 运行时失败。当前目标受阻且有排队目标时，TUI 会提示。
-
-### 适用与回避
-
-- 适合：有可验证终点（测试输出、文件改动、命令结果）的任务。
-- 回避：宽泛话题、开放讨论、不可能任务、含糊或过于复杂的目标。
-
-### Prompt（`-p`）模式限制
-
-仅支持「创建目标」。退出码：`0` 完成、`3` 受阻、`6` 暂停（见 `kimi-subagent/references/headless-output.md`）。
-
-## 五、典型用例（use-cases）
-
-七类常见场景，均为自然语言提问驱动：
-
-1. **理解陌生项目**：梳理架构、入口、模块依赖、配置/数据加载流程；定位某机制实现。
-2. **实现新功能**：新增工具/函数并迭代改进。
-3. **修 Bug**：先排查列可疑位置，再定位修复（尤其偶发/并发问题）。
-4. **测试与重构**：补单测覆盖多场景；抽取重复逻辑成中间件。
-5. **一次性脚本/自动化**：批量改写代码（如 `var`→`const`）、分析日志统计。
-6. **定时任务与提醒**：如「下午 2:30 提醒我查部署」「每工作日 9 点汇总 CI 失败」（cron 能力，可用 `KIMI_DISABLE_CRON` 关闭）。
-7. **文档生成与维护**：改了接口签名后同步 JSDoc / README 示例。
+- 按键：输入/历史、`Ctrl-S` 插话、`Ctrl-O` 折叠、`Ctrl-B` 转后台、`@` 引文件、`Ctrl-V`/`Alt-V` 贴图、`Ctrl-G` 外部编辑器、审批面板操作。
+- 模式切换的交互入口（`Shift-Tab`/`/plan`/`/yolo`/`/auto`）——headless 用对应 flag，见 `cli-reference.md`。
+- 可视化 / Web 模式（`kimi vis` / `kimi web` / `kimi server`）。
+- 典型用例（理解项目、改 bug、写测试等自然语言场景）。

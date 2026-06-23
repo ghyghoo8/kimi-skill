@@ -71,7 +71,7 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 - `/compact [指令]` 压缩上下文省 token；按工作目录分组存储，**勿手改 `sessions/`**。
 - 导出：`/export-md [path]`（`/export`）导 Markdown；`kimi export [id]` 打包 ZIP；`/export-debug-zip` 调试包。
 - `/btw [问题]` 在分叉子 agent 里开侧聊不打断主线。
-- 输入机制（`@` 引文件、`Ctrl-V` 贴图、`Ctrl-G` 外部编辑器、审批面板）、会话存储与 Goal 模式细节 → `references/interaction.md`。
+- 会话存储结构、多轮 headless 续接（`-c`/`-S`）、`--add-dir`、Goal 的 `-p` 退出码 → `references/interaction.md`（已聚焦 subagent；纯交互 TUI 用法仅标记）。
 
 ## 5. 斜杠命令
 
@@ -100,7 +100,8 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 
 ## 8. 关键快捷键
 
-`Enter` 发送 · `Shift-Enter`/`Ctrl-J` 换行 · `Esc` 中断流式/关弹窗 · `Ctrl-C` 停止输出（两次退出）· `Ctrl-D` 空输入退出 · `Shift-Tab` 切 Plan · `Ctrl-S` 输出中插话 · `Ctrl-O` 折叠/展开工具输出 · `Ctrl-B` 前台任务转后台（v0.19）· `Ctrl-V`/`Alt-V` 贴图 · `Ctrl-G` 外部编辑器 · `@` 引文件。完整交互与按键见 `references/interaction.md`。
+常用：`Esc` 中断流式 · `Ctrl-C` 停止（两次退出）· `Ctrl-S` 输出中插话 · `Ctrl-O` 折叠工具输出 · `@` 引文件。
+> 键盘/输入等纯交互 TUI 操作与 subagent 底座定位无关，**不在此详列**（需要查官方 `reference/keyboard`）。
 
 ## 9. 典型用例
 
