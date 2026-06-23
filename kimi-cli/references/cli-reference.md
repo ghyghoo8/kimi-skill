@@ -45,15 +45,14 @@
 | 子命令 | 说明 |
 |---|---|
 | `kimi login` | 非交互 OAuth 设备码登录 |
-| `kimi acp` | 切换 Agent Client Protocol 模式（IDE 集成） |
 | `kimi doctor [config\|tui] [path]` | 校验 `config.toml` / `tui.toml` |
 | `kimi export [id]` | 打包会话为 ZIP |
 | `kimi migrate` | 迁移旧版 kimi-cli 数据到 kimi-code |
 | `kimi upgrade` | 检查并安装更新 |
 | `kimi provider <action>` | 供应商管理（见下） |
-| `kimi vis [id]` | 会话可视化（浏览器，v0.16，见下） |
-| `kimi web` | 浏览器里继续当前会话（v0.17，见下） |
-| `kimi server <sub>` | 本地服务（REST+WebSocket+Web UI，v0.17，见下） |
+| `kimi acp` | IDE 集成（ACP）— ⚠️ 交互式，**超出 subagent 底座范围**，不展开 |
+| `kimi vis [id]` | 浏览器会话可视化 — ⚠️ 交互式，**超出范围**，不展开 |
+| `kimi web` / `kimi server <sub>` | 浏览器 Web 模式 / 本地服务 — ⚠️ 交互式，**超出范围**，不展开 |
 
 ### `kimi login`
 
@@ -98,42 +97,9 @@ Shell 内管理供应商，等价于非交互的 TUI `/provider`。
 | `provider catalog list [providerId]` | 浏览 models.dev 公共目录而不改配置。`--filter <子串>`（对 id/name 不区分大小写）、`--url <url>`（默认 `https://models.dev/api.json`）、`--json` |
 | `provider catalog add <providerId>` | 按 id 直接导入已知供应商（如 `anthropic`/`openai`）。`--api-key <key>`（或 `KIMI_REGISTRY_API_KEY`）、`--default-model <modelId>`（导入后设 `default_model` 为 `<providerId>/<modelId>`）、`--url <url>` |
 
-### `kimi vis [sessionId] [options]`（v0.16）
+### 交互/Web 子命令（超出范围，仅标记）
 
-启动**会话可视化工具**，在浏览器里直观查看一次会话全过程。命令在进程内起一个指向本地会话的服务、打印访问地址、打开浏览器，持续运行到 `Ctrl-C`。
-
-| 参数 | 说明 |
-|---|---|
-| `sessionId` | 可选；打开指定会话的可视化页，省略则显示列出全部会话的首页 |
-| `--port <number>` | 绑定端口，默认自动选空闲端口 |
-| `--host <host>` | 绑定主机，默认 `127.0.0.1` |
-| `--no-open` | 不自动开浏览器，仅打印访问 URL |
-
-```sh
-kimi vis                                  # 开首页
-kimi vis 01HZ...XYZ                       # 直接开某会话
-kimi vis --host 0.0.0.0 --port 8123 --no-open
-```
-
-### `kimi web [--no-open] [--foreground]`（v0.17）
-
-把当前会话挪到浏览器继续，是 **`kimi server run --open`** 的简写：后台启动本地 Kimi 服务（已运行则复用），用默认浏览器打开 Web UI，命令随即返回、服务驻留后台。
-
-| 选项 | 说明 |
-|---|---|
-| `--no-open` | 不开浏览器（等价 `kimi server run`） |
-| `--foreground` | 在当前终端前台运行，同时开浏览器 |
-| `--port` / `--log-level` | 同 `kimi server run` |
-
-### `kimi server <subcommand>`（v0.17）
-
-本地服务，把 REST、WebSocket API 与 Web UI 合在一个进程。
-
-| 子命令 | 说明 |
-|---|---|
-| `kimi server run` | 启动或复用后台守护进程，健康后返回。`--port <port>`（默认 `58627`）、`--log-level <level>`、`--debug-endpoints`、`--foreground`（前台）、`--open`（健康后开 Web UI） |
-| `kimi server install` | 注册为 OS 托管服务（launchd/systemd/schtasks），开机自启 |
-| `kimi server uninstall` / `start` / `stop` / `restart` / `status` | 生命周期管理 |
+`kimi acp`（IDE/ACP）、`kimi vis`（浏览器会话可视化）、`kimi web` / `kimi server`（Web UI 本地服务）均面向**交互式**使用，与「kimi 做 subagent 底座」定位无关，**本仓库有意不展开**。需要时见官方 `reference/kimi-command` / `guides/ides`。
 
 ## 环境变量（常用）
 

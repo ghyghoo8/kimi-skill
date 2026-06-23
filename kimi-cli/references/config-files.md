@@ -42,13 +42,26 @@
 | `env` | table<string,string> | | 备用凭证来源（如 `KIMI_API_KEY`） |
 | `custom_headers` | table<string,string> | | 每请求自定义 HTTP 头 |
 
-凭证优先级：`api_key` ＞ `env` 子表 ＞ 两者都缺则启动报错。
+凭证优先级：`api_key` ＞ `env` 子表 ＞ 两者都缺则启动报错。CLI 不从 shell 环境变量自动取凭证。
+
+`type` 对应协议（thinking/视觉/工具调用等能力按模型名前缀自动匹配）：
+
+| type | 协议 | 典型用途 |
+|---|---|---|
+| `kimi` | OpenAI 兼容 | Kimi Code 托管服务、Kimi Platform key |
+| `anthropic` | Anthropic Messages | Claude |
+| `openai` | OpenAI Chat Completions | OpenAI 及兼容（DeepSeek/Qwen 等） |
+| `openai_responses` | OpenAI Responses | OpenAI 较新接口 |
+| `google-genai` | Google GenAI | Gemini |
+| `vertexai` | Google GenAI on Vertex | Vertex AI |
 
 ```toml
 [providers.kimi.env]
 KIMI_API_KEY = "sk-xxx"
 KIMI_BASE_URL = "https://api.moonshot.ai/v1"
 ```
+
+> 交互式管理用 TUI `/provider`（或 `kimi provider`，见 `cli-reference.md`）；OAuth 托管账号不在 `/provider` 里、用 `/login`、`/logout` 管。
 
 ### `[models.<alias>]` — 模型别名
 

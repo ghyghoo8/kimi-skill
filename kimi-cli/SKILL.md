@@ -35,6 +35,7 @@ kimi migrate        # 迁移旧版 kimi-cli 数据
 
 - 首次使用：进入后 `/login` 配置凭证（OAuth 设备码或 API key）。也可 `kimi login` 非交互登录。
 - Windows 需 Git for Windows；Git Bash 非默认路径时设 `KIMI_SHELL_PATH`。
+- 从旧版 Python `kimi-cli` 迁移：首次跑 `kimi` 会检测 `~/.kimi/` 并提示，或随时 `kimi migrate`（迁配置/MCP/输入历史/可选会话；**不迁** OAuth 凭证、MCP 授权、旧插件——迁后重新 `/login` 并重授权；旧数据不动）。
 
 ## 2. 启动与常用命令行参数
 
@@ -49,10 +50,10 @@ kimi -y / --yolo           # 自动批准常规工具调用
 kimi --auto                # auto 权限模式（工具自动处理，无需逐次确认）
 kimi --add-dir <path>      # 额外工作目录（可重复，v0.19）
 kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-subagent 子 Skill
-kimi web                   # 在浏览器里继续会话（v0.17）
 ```
 
-完整 flag、子命令（`login` `acp` `doctor` `export` `migrate` `upgrade` `provider` `vis` `web` `server`）、互斥规则与快捷键 → `references/cli-reference.md`。
+完整 flag、子命令、互斥规则与快捷键 → `references/cli-reference.md`。
+（`acp`/`vis`/`web`/`server` 等交互/Web 子命令与 subagent 底座定位无关，仅标记不展开。）
 
 - `kimi vis [id]`（v0.16）：浏览器里可视化查看一次会话全过程（`--port`/`--host`/`--no-open`）。
 
@@ -82,6 +83,10 @@ kimi web                   # 在浏览器里继续会话（v0.17）
 - **MCP**：`/mcp` 查看服务器与连接状态；`/mcp-config` 对话式增改与鉴权（`/mcp-config login <server>`）。三种接入 stdio/HTTP/SSE，声明在 `~/.kimi-code/mcp.json` 或项目级 `.kimi-code/mcp.json`；工具名 `mcp__<server>__<tool>`。完整 schema 与字段 → `references/mcp.md`。
 - **钩子（Hooks）**：`config.toml` 的 `[[hooks]]`，「事件→脚本」自动化（如 `PreToolUse` 拦危险命令）；事件全表、stdin/退出码契约 → `references/hooks.md`。
 - 官方数据源插件 `kimi-datasource`（金融/宏观/企业/学术）→ 见 `kimi-datasource` 子 Skill。
+- **内置工具**（`Read`/`Write`/`Edit`/`Bash`/`Grep`/`Agent`/`AgentSwarm`/`Task*`/`Cron*` 等 + 审批默认）→ `references/tools.md`。委派 kimi 时据此定 `--auto`/权限面。
+- **Agent Skills 编写/注入**（frontmatter、`--skills-dir` 给子 agent 注入能力）→ `references/skills.md`。
+
+> **范围说明**：本 Skill 集定位是「**用 kimi 做 subagent 底座**」（宿主 headless 委派）。与该定位无关的交互式/外观功能**有意不深入**，仅在此标记：自定义主题（`/theme`/`/custom-theme`）、IDE 集成（`kimi acp`/Zed/JetBrains）、Web 模式（`kimi web`/`kimi server`/`kimi vis`）、纯 TUI 便捷项（`/btw`/`/import-from-cc-codex` 等）。需要时查官方文档。
 
 ## 7. 配置与排错
 
@@ -89,8 +94,8 @@ kimi web                   # 在浏览器里继续会话（v0.17）
 - `kimi doctor [config|tui] [path]` 校验配置。
 - 模型供应商：`kimi provider add/remove/list`、`kimi provider catalog list/add`（从 models.dev 目录导入，如 `anthropic`/`openai`）→ 详见 `references/cli-reference.md`。
 - **配置项全表**（`[providers]` / `[models]` / `[thinking]` / `[loop_control]` / `[background]` / `[experimental]` / `[services]` / `[[permission.rules]]` / `[[hooks]]`、tui.toml）→ `references/config-files.md`。
-- **覆盖优先级、环境变量全表、数据目录结构** → `references/env-and-data.md`。要点：命令行（仅本次）＞ 用户 `config.toml`；普通参数不从 shell env 取回退；凭证只从 `config.toml` 读；**无项目级 config.toml，跨项目隔离用 `KIMI_CODE_HOME`**；临时模型走 `KIMI_MODEL_*`。
-- Skills 发现目录、`extra_skill_dirs`、`--skills-dir` 等细节 → `references/cli-reference.md`。
+- **覆盖优先级、环境变量全表、数据目录结构** → `references/env-and-data.md`。要点：命令行（仅本次）＞ 用户 `config.toml`；普通参数不从 shell env 取回退；凭证只从 `config.toml` 读；`config.toml` 仍用户级一份，但 **v0.19 起有项目级 `.kimi-code/local.toml`**（`/add-dir` 写入）；完全隔离用 `KIMI_CODE_HOME`；临时模型走 `KIMI_MODEL_*`。
+- Skills 发现目录、`extra_skill_dirs`、`--skills-dir` 等细节 → `references/skills.md`。
 - **报错速查**（401 鉴权 / 429 限流配额 / 400 请求格式 / 404 模型端点 / 500 服务端 / 工具错误）→ `references/error-reference.md`。
 
 ## 8. 关键快捷键

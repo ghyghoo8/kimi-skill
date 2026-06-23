@@ -14,9 +14,8 @@
 | `/experiments`（`/experimental`） | 启用实验特性 |
 | `/permission` | 选择权限模式 |
 | `/editor` | 配置 Ctrl-G 外部编辑器 |
-| `/theme` | 切换终端配色 |
-| `/custom-theme` | 交互生成自定义配色主题（JSON，只写想改的颜色）（v0.13） |
-| `/import-from-cc-codex` | 一键从 Claude Code / Codex 导入设置（v0.13） |
+| `/theme` · `/custom-theme` | 配色主题 — ⚠️ 外观，**超出 subagent 底座范围** |
+| `/import-from-cc-codex` | 从 Claude Code/Codex 导入设置 — ⚠️ 一次性，**超出范围** |
 
 ## 会话管理
 
@@ -30,7 +29,7 @@
 | `/compact [指令]` | 压缩上下文释放 token |
 | `/undo [次数]` | 从当前上下文撤销最近的提示词；不带参打开交互式选择器（v0.14） |
 | `/add-dir <path>` | 为当前会话添加额外工作目录；可选「记住」写入项目级 `.kimi-code/local.toml`（v0.19） |
-| `/web` | 把当前会话挪到浏览器继续（v0.17，等价后台 `kimi server` + 开 Web UI） |
+| `/web` | 浏览器继续会话 — ⚠️ 交互/Web，**超出 subagent 底座范围** |
 | `/init` | 分析代码库并生成 `AGENTS.md` |
 | `/export-md [路径]`（`/export`） | 导出会话为 Markdown |
 | `/export-debug-zip` | 导出调试 ZIP |
