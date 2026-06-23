@@ -82,3 +82,15 @@ echo "exit=$?"
 ```
 
 解析 stdout 的逐行 JSON、取末条 assistant、读退出码 → 见 `references/headless-output.md`。
+
+## 9. 程序化封装的三条实测教训（宿主把委派封装成函数时）
+
+宿主常把 §1 的 headless 调用封装成一个 Python/JS 函数复用。三条踩过的坑：
+
+- **raw 原文 vs 强制 JSON 解析**：封装若默认把输出走 JSON 解析（图省事直接拿 dict），则 kimi 返回 **Markdown 表/自由文本时会解析失败抛错**——**数据其实已经拿到,只是解析层挂了**。要 Markdown/自由结论时走「**原文/raw**」模式;只在确需结构化时才用 JSON 模式(配合 §1 的 JSON 契约要求 kimi「最后只输出一段 JSON」)。
+- **委派"取数"而非"合成"**：把**取数据/查财报/批量对比**派给 kimi 省宿主(贵模型)token;但**"写结论/合成/点评"别外包**——kimi 为合成会再去调数据源/工具,易**超时**。**取数给子 agent、合成留宿主**。
+- **数据目标的可达性边界**：某些数据源/标的封装网关**取不到**(如特定交易所代码格式不被识别),需在宿主侧**降级到专用数据源**,别假设 kimi 全能;先小样本验证可达性再批量委派。
+
+> 多 provider 异源对抗(同一封装接多家模型互换跑、降低单模型偏差)是进阶用法——把上面「raw 拿原文 + 容错解析」做成统一接口即可横向扩展到多家。
+
+> 深入:输出格式与解析(raw/stream-json/JSON 契约)→ `references/headless-output.md`;鉴权/PATH/超时等封装坑 → `references/integration-troubleshooting.md`;何时该委派 → `references/patterns.md`。
