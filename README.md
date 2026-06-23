@@ -5,6 +5,7 @@ Skill（`kimi`）按用户意图分发到 4 个专门子 Skill。核心目标是
 Kimi 主 agent）把 Kimi Code CLI 当作可委派的子 agent**（headless 外壳调用），并灵活使用 kimi 的其它能力。
 
 > 内容依据 Node.js 版 Kimi Code CLI（`@moonshot-ai/kimi-code`）官方文档：https://www.kimi.com/code/docs/
+> 源码仓库（权威、含 patch；官方站点会滞后）：https://github.com/MoonshotAI/kimi-code
 > 当前校准版本：**kimi-code v0.19.1**（发布 2026-06-23，核对 2026-06-23）。更新前先 `kimi --version` 比对；
 > 版本历史与各功能起始版本见 `kimi-cli/references/changelog.md`。
 
@@ -63,4 +64,6 @@ cp -R kimi-router kimi-subagent kimi-cli kimi-api kimi-datasource ~/.kimi-code/s
 
 ## 维护
 
-CLI / API 变化较快，更新前请核对官方文档（见各 `SKILL.md` 底部链接）。维护约定详见 `CLAUDE.md`。
+CLI / API 变化较快。更新以**源码仓库** https://github.com/MoonshotAI/kimi-code 为准（官方站点滞后、漏 patch）：
+跑 `scripts/sync-from-upstream.sh`（diff 本地 clone 的 `docs/` 锚点→最新 tag，按映射列出待改文件），
+或用 workflow `sync-kimi-skill` 全自动同步。维护约定详见 `CLAUDE.md`。
