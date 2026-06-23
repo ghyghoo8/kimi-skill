@@ -81,6 +81,8 @@ customization/plugins.md|kimi-cli/references/plugins.md
 customization/agents.md|kimi-subagent/references/patterns.md
 customization/skills.md|kimi-cli/references/skills.md
 customization/themes.md|[IGNORE] 自定义主题/外观，与 subagent 底座无关
+customization/datasource.md|[IGNORE] kimi-datasource 单独实现，不同步
+guides/getting-started.md|kimi-cli/SKILL.md（安装/Node 版本段）
 guides/interaction.md|kimi-cli/references/interaction.md（仅取 headless 相关：模式/会话续接/退出码）
 guides/sessions.md|kimi-cli/references/interaction.md
 guides/goals.md|kimi-cli/references/interaction.md（仅 -p 退出码 3/6）
@@ -107,6 +109,15 @@ printf '%s\n' "$MAP" | while IFS='|' read -r doc target; do
        [ "$FULL" = 1 ] && git -C "$REPO" diff "$FROM_TAG..$TO_TAG" -- "docs/zh/$doc" | sed 's/^/      /';;
   esac
 done
+
+echo
+echo "## ⚠️ MAP 未覆盖的变更 doc（新页面？需人工决定：纳入 MAP 或标 [IGNORE]）"
+known="$(printf '%s\n' "$MAP" | cut -d'|' -f1 | sed '/^$/d')"
+git -C "$REPO" diff --name-only "$FROM_TAG..$TO_TAG" -- 'docs/zh/*.md' 'docs/zh/**/*.md' 2>/dev/null \
+  | sed 's#^docs/zh/##' | sort -u | while read -r d; do
+    printf '%s\n' "$known" | grep -qxF "$d" || echo "  ✗ $d"
+  done
+echo "  （以上若为空＝无新页面；非空则 MAP 漏了，补进脚本 MAP 与映射文档）"
 
 echo
 echo "提示：逐条按上面清单改对应 skill 文件，行为变更打版本门控；"

@@ -37,6 +37,7 @@ const SCAN_SCHEMA = {
       },
     },
     ignoredChanged: { type: 'array', items: { type: 'string' }, description: '有变更但超出范围、被跳过的上游 doc' },
+    unmappedChanged: { type: 'array', items: { type: 'string' }, description: 'docs/zh 下有变更但不在下方映射/忽略清单的文件（疑似新页面，需人工决定）' },
   }, required: ['fromRef', 'toRef', 'changedTargets'],
 }
 
@@ -71,15 +72,19 @@ const scan = await agent(
 - customization/themes.md, customization/datasource.md, reference/kimi-acp.md, guides/ides.md
 （datasource 单独实现；其余为交互/外观，超出范围。）
 
+另外：用 \`git -C ${REPO} diff --name-only <from>..<to> -- 'docs/zh/*.md' 'docs/zh/**/*.md'\` 列出所有变更的 zh doc，
+凡**既不在上面映射、也不在忽略清单**的，放进 unmappedChanged（疑似新页面，需人工决定纳入或忽略）。
+
 只读不写。返回结构化结果。`,
   { label: 'scan', phase: 'Scan', schema: SCAN_SCHEMA },
 )
 
 log(`from ${scan.fromRef} → to ${scan.toRef}；命中 ${scan.changedTargets.length} 个目标，忽略 ${(scan.ignoredChanged||[]).length} 个超范围变更`)
+if ((scan.unmappedChanged||[]).length) log(`⚠️ MAP 未覆盖的变更 doc（疑似新页面，需人工决定）：${scan.unmappedChanged.join(', ')}`)
 
 if (!scan.changedTargets.length) {
   log('无范围内变更，结束。')
-  return { fromRef: scan.fromRef, toRef: scan.toRef, updated: [], note: 'no in-scope doc changes' }
+  return { fromRef: scan.fromRef, toRef: scan.toRef, updated: [], unmapped: scan.unmappedChanged || [], note: 'no in-scope doc changes' }
 }
 
 const VERDICT_SCHEMA = {
@@ -135,4 +140,4 @@ ${updated.map((r) => `- ${r.target}: ${r.summary ? String(r.summary).slice(0, 20
   { label: 'finalize', phase: 'Finalize' },
 )
 
-return { fromRef: scan.fromRef, toRef: scan.toRef, updated: updated.map((r) => r.target), ignored: scan.ignoredChanged || [], report }
+return { fromRef: scan.fromRef, toRef: scan.toRef, updated: updated.map((r) => r.target), ignored: scan.ignoredChanged || [], unmapped: scan.unmappedChanged || [], report }

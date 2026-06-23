@@ -43,7 +43,7 @@ kimi migrate        # 迁移旧版 kimi-cli 数据
 kimi                       # 启动交互式 TUI
 kimi -w /path/to/project   # 指定工作目录
 kimi -m kimi-k2.6          # 指定模型
-kimi -c                    # 续接当前目录最近会话（-C 仍是隐藏别名）
+kimi -C                    # 续接当前目录最近会话（unreleased/main #999 改主短为 -c）
 kimi -S <id>               # 续接指定会话（或交互选择）
 kimi --plan                # 以 Plan 模式启动（先只读探索）
 kimi -y / --yolo           # 自动批准常规工具调用
@@ -71,7 +71,7 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 - `/compact [指令]` 压缩上下文省 token；按工作目录分组存储，**勿手改 `sessions/`**。
 - 导出：`/export-md [path]`（`/export`）导 Markdown；`kimi export [id]` 打包 ZIP；`/export-debug-zip` 调试包。
 - `/btw [问题]` 在分叉子 agent 里开侧聊不打断主线。
-- 会话存储结构、多轮 headless 续接（`-c`/`-S`）、`--add-dir`、Goal 的 `-p` 退出码 → `references/interaction.md`（已聚焦 subagent；纯交互 TUI 用法仅标记）。
+- 会话存储结构、多轮 headless 续接（`-C`/`-S`）、`--add-dir`、Goal 的 `-p` 退出码 → `references/interaction.md`（已聚焦 subagent；纯交互 TUI 用法仅标记）。
 
 ## 5. 斜杠命令
 
