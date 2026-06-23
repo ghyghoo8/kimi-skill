@@ -29,6 +29,8 @@
 | `/title [文本]`（`/rename`） | 无参显示当前标题；带参设新标题（≤200 字符） |
 | `/compact [指令]` | 压缩上下文释放 token |
 | `/undo [次数]` | 从当前上下文撤销最近的提示词；不带参打开交互式选择器（v0.14） |
+| `/add-dir <path>` | 为当前会话添加额外工作目录；可选「记住」写入项目级 `.kimi-code/local.toml`（v0.19） |
+| `/web` | 把当前会话挪到浏览器继续（v0.17，等价后台 `kimi server` + 开 Web UI） |
 | `/init` | 分析代码库并生成 `AGENTS.md` |
 | `/export-md [路径]`（`/export`） | 导出会话为 Markdown |
 | `/export-debug-zip` | 导出调试 ZIP |

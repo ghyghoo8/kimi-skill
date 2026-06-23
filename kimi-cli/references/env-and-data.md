@@ -25,7 +25,7 @@
 - **运行时开关**：如 `KIMI_DISABLE_TELEMETRY`，作为「额外禁止」直接关子系统，非普通覆盖语义。
 - **端点/诊断**：`KIMI_CODE_OAUTH_HOST` `KIMI_CODE_BASE_URL` `KIMI_LOG_LEVEL` 在 OAuth/日志初始化时读取。
 
-> **无项目级配置**：CLI 只读一个用户级 `config.toml`，没有项目级 config 机制。跨项目隔离用 `KIMI_CODE_HOME` 指向不同数据目录。（注：Skills 与 MCP 有项目级路径，见数据目录一节。）
+> **配置分层**：主配置 `config.toml` 仍只读用户级一份；但 **v0.19 起新增项目级 `.kimi-code/local.toml`**（由 `/add-dir` 选「记住」或手动写，存额外工作目录等本地/工作区设置，建议加 `.gitignore`）。跨项目完全隔离仍用 `KIMI_CODE_HOME` 指向不同数据目录。Skills 与 MCP 也有项目级路径，见数据目录一节。
 
 ```sh
 # 测试环境隔离
@@ -51,6 +51,7 @@ kimi --yolo -p "批量重命名以下文件..."
 | `KIMI_CODE_NO_AUTO_UPDATE` | 完全关闭更新预检（旧名 `KIMI_CLI_NO_AUTO_UPDATE`） | `1`/`true`/`yes`/`on` |
 | `KIMI_DISABLE_CRON` | 关 cron 调度工具（拒绝新调度，不触发已有） | `1` |
 | `KIMI_REGISTRY_API_KEY` | `provider add` / `catalog add` 的注册表 key | —（见 cli-reference） |
+| `KIMI_CODE_AGENT_SWARM_MAX_CONCURRENCY` | 限制 `/swarm` 初始加速阶段并发子 agent 数（防触发限流，v0.18） | 正整数 |
 | `HTTP_PROXY`/`http_proxy` · `HTTPS_PROXY`/`https_proxy` | `http://` / `https://` 请求代理（v0.12 官方支持，大小写均认） | 代理 URL |
 | `ALL_PROXY`/`all_proxy` | 未设按 scheme 的代理时的回退；SOCKS 用 `socks5://`/`socks4://` 前缀 | 代理 URL |
 | `NO_PROXY`/`no_proxy` | 绕过代理的主机列表（逗号分隔） | 如 `localhost,127.0.0.1` |

@@ -6,6 +6,7 @@
 
 - 主配置：`~/.kimi-code/config.toml`（行为/供应商/模型/权限/钩子等）
 - UI 偏好：`~/.kimi-code/tui.toml`（终端 UI）
+- **项目级本地配置**：`.kimi-code/local.toml`（v0.19 起，工作目录下；存额外工作目录等本地/工作区设置，由 `/add-dir` 选「记住」写入，建议加 `.gitignore`）
 - 二者首次运行自动创建。`KIMI_CODE_HOME` 可改基目录 → `$KIMI_CODE_HOME/config.toml`、`$KIMI_CODE_HOME/tui.toml`。
 - TOML 语法：字段用 snake_case；含 `.` 的键名要加引号（如 `[models."gpt-4.1"]`）。
 - **凭证只从 `config.toml` 读**：shell 里的 `export KIMI_API_KEY=...` 不会自动注入供应商。

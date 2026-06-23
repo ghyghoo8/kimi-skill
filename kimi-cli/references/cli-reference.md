@@ -11,7 +11,7 @@
 | `--version` | `-V` | 显示版本并退出 |
 | `--help` | `-h` | 帮助信息 |
 | `--session [id]` | `-S` | 续接指定 id 会话，或交互式选择 |
-| `--continue` | `-C` | 续接当前目录最近会话 |
+| `--continue` | `-c` | 续接当前目录最近会话（v0.19.1 起主短为 `-c`；`-C` 仍是隐藏别名） |
 | `--model <model>` | `-m` | 指定本次启动模型别名；缺省取 config 的 `default_model` |
 | `--prompt <prompt>` | `-p` | 非交互单条执行；流式输出到 stdout，不开 TUI |
 | `--output-format <fmt>` | — | `text`（默认，transcript 样式）或 `stream-json`（JSONL）；**仅配合 `-p`**。调用方要结构化数据看下方 |
@@ -20,8 +20,9 @@
 | `--plan` | — | 以 Plan 模式开新会话；先用只读工具探索 |
 | `--skills-dir <dir>` | — | 从指定目录加载 Skills，**替代自动发现**（可重复） |
 | `--work-dir <dir>` | `-w` | 工作目录 |
+| `--add-dir <dir>` | — | 为本次会话添加额外工作目录；相对路径按 cwd 解析；**可重复**（v0.19） |
 
-**隐藏别名**：`-r` / `--resume` ＝ `--session`；`--yes` / `--auto-approve` ＝ `--yolo`。
+**隐藏别名**：`-r` / `--resume` ＝ `--session`；`--yes` / `--auto-approve` ＝ `--yolo`；`-C` ＝ `--continue`（旧主短，现 `-c`）。
 
 ### Flag 互斥规则
 
@@ -51,6 +52,8 @@
 | `kimi upgrade` | 检查并安装更新 |
 | `kimi provider <action>` | 供应商管理（见下） |
 | `kimi vis [id]` | 会话可视化（浏览器，v0.16，见下） |
+| `kimi web` | 浏览器里继续当前会话（v0.17，见下） |
+| `kimi server <sub>` | 本地服务（REST+WebSocket+Web UI，v0.17，见下） |
 
 ### `kimi login`
 
@@ -111,6 +114,26 @@ kimi vis                                  # 开首页
 kimi vis 01HZ...XYZ                       # 直接开某会话
 kimi vis --host 0.0.0.0 --port 8123 --no-open
 ```
+
+### `kimi web [--no-open] [--foreground]`（v0.17）
+
+把当前会话挪到浏览器继续，是 **`kimi server run --open`** 的简写：后台启动本地 Kimi 服务（已运行则复用），用默认浏览器打开 Web UI，命令随即返回、服务驻留后台。
+
+| 选项 | 说明 |
+|---|---|
+| `--no-open` | 不开浏览器（等价 `kimi server run`） |
+| `--foreground` | 在当前终端前台运行，同时开浏览器 |
+| `--port` / `--log-level` | 同 `kimi server run` |
+
+### `kimi server <subcommand>`（v0.17）
+
+本地服务，把 REST、WebSocket API 与 Web UI 合在一个进程。
+
+| 子命令 | 说明 |
+|---|---|
+| `kimi server run` | 启动或复用后台守护进程，健康后返回。`--port <port>`（默认 `58627`）、`--log-level <level>`、`--debug-endpoints`、`--foreground`（前台）、`--open`（健康后开 Web UI） |
+| `kimi server install` | 注册为 OS 托管服务（launchd/systemd/schtasks），开机自启 |
+| `kimi server uninstall` / `start` / `stop` / `restart` / `status` | 生命周期管理 |
 
 ## 环境变量（常用）
 

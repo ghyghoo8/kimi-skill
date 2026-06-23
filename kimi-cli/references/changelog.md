@@ -2,7 +2,7 @@
 
 官方更新日志：https://www.kimi.com/code/docs/kimi-code/whats-new.html
 
-**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.16.0（发布 2026-06-16，核对 2026-06-17）。**
+**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.19.1（发布 2026-06-23，核对 2026-06-23；最新 minor v0.19.0 2026-06-22）。**
 更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
 
 > ⚠️ 官方 what's-new 只列 minor 版本、且会滞后。**patch 版本与权威细节看源码仓库** `apps/kimi-code/CHANGELOG.md`（`MoonshotAI/kimi-code`）。源码核对（2026-06-17）发现站点漏掉的：
@@ -12,6 +12,22 @@
 > - datasource 插件 **v3.2.0**，装后不自动更新、需重装升级（#646）。
 
 ## 各版本要点（新→旧）
+
+### v0.19.1 — 2026-06-23
+- 修复：ACP 编辑器（如 Zed）无法新建 thread；归档/删除会话时清空其全部状态；web 侧栏未读点跨标签同步。
+
+### v0.19.0 — 2026-06-22
+- **额外工作目录**：`/add-dir <path>`（会话内）或 `kimi --add-dir <path>`（启动时）添加工作目录外的目录；选「记住」写入**项目级 `.kimi-code/local.toml`**（建议加 .gitignore）。
+- **后台任务**：`Ctrl+B` 把长跑的前台命令/子 agent 转后台，在 `/tasks` 面板查看。
+- 供应商安全策略拦截改为**显式展示**（不再静默当完成）；文件 mention 体验优化；按内容探测图片真实格式。
+
+### v0.18.0 — 2026-06-18
+- **AgentSwarm 并发上限**：环境变量 `KIMI_CODE_AGENT_SWARM_MAX_CONCURRENCY` 限制初始加速阶段的并发子 agent 数。
+- Web 会话搜索（按标题/最近提问过滤）、聊天视图上滚懒加载；插件变更提示同时建议 `/reload`。
+
+### v0.17.0 — 2026-06-17
+- **Kimi Code Web 模式**：`kimi web` 或 `/web` 把当前会话挪到浏览器继续；`kimi web` ＝ `kimi server run --open` 的简写（背后是 `kimi server` 本地服务）。
+- 改进 OAuth token 刷新错误处理；v0.17.1 修复 `kimi web` 后台启动问题。
 
 ### v0.16.0 — 2026-06-16
 - **`kimi vis`**：内置会话可视化工具，浏览器里直观查看一次会话全过程；支持 `--port`/`--host`、`--no-open`、`kimi vis <sessionId>` 深链。
@@ -88,3 +104,6 @@
 | `Interrupt` hook 事件、`/undo` 交互式选择 | v0.14.0 |
 | 全会话选择器（跨目录/搜索/分页）、MCP 旧式 SSE 支持、推理跟随用户语言 | v0.15.0 |
 | `kimi vis` 会话可视化、阻止 Anthropic 兼容供应商读 shell 凭证 | v0.16.0 |
+| `kimi web`/`/web` Web 模式、`kimi server` 本地服务 | v0.17.0 |
+| `KIMI_CODE_AGENT_SWARM_MAX_CONCURRENCY`、Web 会话搜索 | v0.18.0 |
+| `/add-dir`+`kimi --add-dir`、项目级 `.kimi-code/local.toml`、`Ctrl+B` 后台任务 | v0.19.0 |

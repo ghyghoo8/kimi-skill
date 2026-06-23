@@ -31,7 +31,7 @@ kimi upgrade        # 升级到最新
 kimi migrate        # 迁移旧版 kimi-cli 数据
 ```
 
-> 校准锚点 **v0.16.0（2026-06-16）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
+> 校准锚点 **v0.19.1（2026-06-23）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
 
 - 首次使用：进入后 `/login` 配置凭证（OAuth 设备码或 API key）。也可 `kimi login` 非交互登录。
 - Windows 需 Git for Windows；Git Bash 非默认路径时设 `KIMI_SHELL_PATH`。
@@ -42,15 +42,17 @@ kimi migrate        # 迁移旧版 kimi-cli 数据
 kimi                       # 启动交互式 TUI
 kimi -w /path/to/project   # 指定工作目录
 kimi -m kimi-k2.6          # 指定模型
-kimi -C                    # 续接当前目录最近会话
+kimi -c                    # 续接当前目录最近会话（-C 仍是隐藏别名）
 kimi -S <id>               # 续接指定会话（或交互选择）
 kimi --plan                # 以 Plan 模式启动（先只读探索）
 kimi -y / --yolo           # 自动批准常规工具调用
 kimi --auto                # auto 权限模式（工具自动处理，无需逐次确认）
+kimi --add-dir <path>      # 额外工作目录（可重复，v0.19）
 kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-subagent 子 Skill
+kimi web                   # 在浏览器里继续会话（v0.17）
 ```
 
-完整 flag、子命令（`login` `acp` `doctor` `export` `migrate` `upgrade` `provider` `vis`）、互斥规则与快捷键 → `references/cli-reference.md`。
+完整 flag、子命令（`login` `acp` `doctor` `export` `migrate` `upgrade` `provider` `vis` `web` `server`）、互斥规则与快捷键 → `references/cli-reference.md`。
 
 - `kimi vis [id]`（v0.16）：浏览器里可视化查看一次会话全过程（`--port`/`--host`/`--no-open`）。
 
@@ -93,7 +95,7 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 
 ## 8. 关键快捷键
 
-`Enter` 发送 · `Shift-Enter`/`Ctrl-J` 换行 · `Esc` 中断流式/关弹窗 · `Ctrl-C` 停止输出（两次退出）· `Ctrl-D` 空输入退出 · `Shift-Tab` 切 Plan · `Ctrl-S` 输出中插话 · `Ctrl-O` 折叠/展开工具输出 · `Ctrl-V`/`Alt-V` 贴图 · `Ctrl-G` 外部编辑器 · `@` 引文件。完整交互与按键见 `references/interaction.md`。
+`Enter` 发送 · `Shift-Enter`/`Ctrl-J` 换行 · `Esc` 中断流式/关弹窗 · `Ctrl-C` 停止输出（两次退出）· `Ctrl-D` 空输入退出 · `Shift-Tab` 切 Plan · `Ctrl-S` 输出中插话 · `Ctrl-O` 折叠/展开工具输出 · `Ctrl-B` 前台任务转后台（v0.19）· `Ctrl-V`/`Alt-V` 贴图 · `Ctrl-G` 外部编辑器 · `@` 引文件。完整交互与按键见 `references/interaction.md`。
 
 ## 9. 典型用例
 
