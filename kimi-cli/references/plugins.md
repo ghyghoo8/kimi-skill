@@ -18,12 +18,18 @@ Plugin 把可复用的 Kimi Code CLI 能力打包成**可安装单元**。可包
 
 ### 交互式管理器 `/plugins`
 
+> **v0.20 起改为四 tab 面板**：`/plugins` 是单一面板，含 **Installed**（管理已装）/ **Official**（官方 marketplace）/ **Third-party**（第三方 marketplace）/ **Custom**（从 URL 安装）四个 tab，用 `Tab` / `Shift-Tab` 切换。下表多数操作作用于 **Installed** tab。
+
 | 键 | 操作 |
 |---|---|
-| Enter / → | 打开选项 / 从市场安装 |
-| Space | 启用/禁用插件；市场内安装/更新 |
-| M | 管理 MCP 服务器 |
-| ← / Esc | 返回上一级 |
+| Tab / Shift-Tab | 在 Installed / Official / Third-party / Custom 四 tab 间切换 |
+| Space | 启用/禁用选中的已装插件（Installed） |
+| D | 移除选中的已装插件（Installed） |
+| M | 管理选中插件的 MCP 服务器（Installed） |
+| R | 重载 `installed.json` 与所有 manifest（Installed） |
+| Enter | Installed：有更新则安装更新，否则查看详情 · Official/Third-party：安装或更新 · Custom：安装 |
+| I | 查看插件详情（Installed） |
+| Esc | 返回或取消 |
 
 ### 斜杠命令
 
@@ -31,7 +37,7 @@ Plugin 把可复用的 Kimi Code CLI 能力打包成**可安装单元**。可包
 /plugins                              打开交互式管理器
 /plugins list                         列出已装插件
 /plugins install <path-or-url>        从本地/zip URL/GitHub 安装
-/plugins marketplace [source]         浏览官方市场
+/plugins marketplace [source]         浏览官方市场，或传入自定义 marketplace JSON 路径/URL
 /plugins info <id>                    查看插件详情（含 diagnostics）
 /plugins enable <id>                  启用
 /plugins disable <id>                 禁用
@@ -56,11 +62,30 @@ Plugin 把可复用的 Kimi Code CLI 能力打包成**可安装单元**。可包
 - **记录**：`$KIMI_CODE_HOME/plugins/installed.json`（已装插件与启用状态）。
 - **移除**：只删安装记录，托管副本与原始源文件仍在磁盘。
 - **范围**：按用户安装，对所有项目生效，暂不支持项目级安装范围。
-- **生效**：插件变更只对**新会话**生效——改完用 `/new`。
+- **生效**：插件变更通过 `/reload` 或新会话生效——改完运行 `/reload` 或 `/new`，当前会话不会更新。（v0.20 前文案为「只对新会话生效」；现在 `/reload` 也可在当前会话生效。）
+
+## 自定义 marketplace JSON
+
+> **v0.20 起**：除官方市场外，可把自定义 marketplace JSON 的路径或 URL 传给 `/plugins marketplace <source>`，或用 `KIMI_CODE_PLUGIN_MARKETPLACE_URL` 覆盖默认市场。`plugins` 数组每个条目需 `id` 和 `source`（本地路径、zip URL 或 GitHub URL）：
+
+```json
+{
+  "version": "2",
+  "plugins": [
+    {
+      "id": "my-plugin",
+      "displayName": "My Plugin",
+      "source": "./my-plugin"
+    }
+  ]
+}
+```
 
 ## 信任等级
 
 `/plugins` 显示信任徽章：`kimi-official`（官方地址）/ `curated`（精选地址）/ `third-party`（其余来源）。
+
+> **v0.20 起**：Installed tab 在市场有新版本时显示更新徽章；Official / Third-party tab 按 tier 列出市场插件，Custom tab 从 URL 安装，市场目录按需自动加载。安装第三方插件（任何非官方地址，含 Custom 安装）会先弹出**默认「取消」**的确认提示，只有选择信任来源后才会安装。
 
 ## Manifest（清单）
 
@@ -137,16 +162,16 @@ HTTP（远程服务）：
 ```
 
 - stdio 的 `command` 可为 `PATH` 命令或以 `./` 开头的插件根相对路径；`cwd` 也须以 `./` 开头且不出插件根，否则该服务器被忽略。
-- 插件 MCP 服务器**只在新会话启动**，可随时禁用。
+- 插件 MCP 服务器在 `/reload` 后或新会话启动（v0.20 前为「只在新会话启动」），可随时禁用。启用/禁用某 server 后运行 `/reload` 即可生效。
 
 ## 安全模型
 
 - 不执行命令型插件工具、hook 或旧式工具运行时。
 - 所有路径在符号链接解析后须留在插件根内。
-- 已启用 MCP 服务器仅在新会话启动，可随时禁用。
+- 已启用 MCP 服务器在 `/reload` 后或新会话启动，可随时禁用。
 - 损坏的 manifest 或不安全路径在 `/plugins info <id>` 的 diagnostics 显示，不影响其它会话。
 
 ## 官方插件
 
 **Kimi Datasource** — 自然语言查金融行情、宏观经济、企业工商、学术文献。
-装法：`/plugins` → Marketplace → 找到 Kimi Datasource → Space 安装 → `/new`。详见 `kimi-datasource` 子 Skill。
+装法（v0.20 起）：`/plugins` → **Official** tab → 找到 Kimi Datasource → `Enter` 安装 → `/reload` 或 `/new`。详见 `kimi-datasource` 子 Skill。

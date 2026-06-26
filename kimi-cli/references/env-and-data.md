@@ -46,7 +46,7 @@ kimi --yolo -p "批量重命名以下文件..."
 | `KIMI_OAUTH_HOST` | OAuth 主机回退 | `https://auth.kimi.com` |
 | `KIMI_CODE_BASE_URL` | 登录后托管 API base（≠ `KIMI_BASE_URL`） | `https://api.kimi.com/coding/v1` |
 | `KIMI_CODE_BACKGROUND_KEEP_ALIVE_ON_EXIT` | 退出保留后台任务（覆盖 config） | `1/true/yes/on` ↔ `0/false/no/off` |
-| `KIMI_CODE_PLUGIN_MARKETPLACE_URL` | 替换插件市场 JSON 源 | URL 或本地路径 |
+| `KIMI_CODE_PLUGIN_MARKETPLACE_URL` | 覆盖 `/plugins` 加载的插件市场 JSON（适合 dev loopback server、测试 CDN 文件或替换 marketplace 目录） | 默认 `https://code.kimi.com/kimi-code/plugins/marketplace.json`；也接受 `http://`/`file://` URL 和本地路径 |
 | `KIMI_SHELL_PATH` | Windows 下 Git Bash 路径覆盖 | 绝对路径 |
 | `KIMI_CODE_NO_AUTO_UPDATE` | 完全关闭更新预检（旧名 `KIMI_CLI_NO_AUTO_UPDATE`） | `1`/`true`/`yes`/`on` |
 | `KIMI_DISABLE_CRON` | 关 cron 调度工具（拒绝新调度，不触发已有） | `1` |

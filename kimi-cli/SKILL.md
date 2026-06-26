@@ -31,7 +31,7 @@ kimi upgrade        # 升级到最新
 kimi migrate        # 迁移旧版 kimi-cli 数据
 ```
 
-> 校准锚点 **v0.19.1（2026-06-23）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
+> 校准锚点 **v0.20.0（2026-06-26）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
 
 - 首次使用：进入后 `/login` 配置凭证（OAuth 设备码或 API key）。也可 `kimi login` 非交互登录。
 - Windows 需 Git for Windows；Git Bash 非默认路径时设 `KIMI_SHELL_PATH`。

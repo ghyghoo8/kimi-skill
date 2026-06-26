@@ -11,7 +11,7 @@
 | `--version` | `-V` | 显示版本并退出 |
 | `--help` | `-h` | 帮助信息 |
 | `--session [id]` | `-S` | 续接指定 id 会话，或交互式选择 |
-| `--continue` | `-c` | 续接当前目录最近会话（**unreleased/main**：#999 把主短从 `-C` 改为 `-c`，`-C` 降为隐藏别名；截至 v0.19.1 仍是 `-C`） |
+| `--continue` | `-c` | 续接当前目录最近会话（**v0.19.2 起**：#999 把主短从 `-C` 改为 `-c`，`-C` 降为隐藏别名；≤v0.19.1 主短为 `-C`） |
 | `--model <model>` | `-m` | 指定本次启动模型别名；缺省取 config 的 `default_model` |
 | `--prompt <prompt>` | `-p` | 非交互单条执行；流式输出到 stdout，不开 TUI |
 | `--output-format <fmt>` | — | `text`（默认，transcript 样式）或 `stream-json`（JSONL）；**仅配合 `-p`**。调用方要结构化数据看下方 |
@@ -21,7 +21,7 @@
 | `--skills-dir <dir>` | — | 从指定目录加载 Skills，**替代自动发现**（可重复） |
 | `--add-dir <dir>` | — | 为本次会话添加额外工作目录；相对路径按 cwd 解析；**可重复**（v0.19） |
 
-**隐藏别名**：`-r` / `--resume` ＝ `--session`；`--yes` / `--auto-approve` ＝ `--yolo`；`-C` ＝ `--continue`（截至 v0.19.1 仍是主短；**unreleased/main** #999 改主短为 `-c`、`-C` 降为别名）。
+**隐藏别名**：`-r` / `--resume` ＝ `--session`；`--yes` / `--auto-approve` ＝ `--yolo`；`-C` ＝ `--continue`（**v0.19.2 起** #999 把主短改为 `-c`、`-C` 降为隐藏别名；≤v0.19.1 `-C` 为主短）。
 
 ### Flag 互斥规则
 
@@ -136,5 +136,7 @@ Shell 内管理供应商，等价于非交互的 TUI `/provider`。
 | `Shift-Tab` | 切换 Plan 模式 |
 | `Ctrl-S` | 输出过程中插入消息 |
 | `Ctrl-O` | 折叠 / 展开工具输出 |
+| `Ctrl-T` | 待办列表被截断时，展开 / 折叠完整列表（**v0.19.2 起**） |
+| `!` | 空输入框中键入进入 Shell 模式，直接运行终端命令；命令运行期间按 `Ctrl+B` 转后台任务（**v0.20.0 起**） |
 
 完整快捷键见 https://www.kimi.com/code/docs/kimi-code-cli/reference/keyboard.html

@@ -9,7 +9,7 @@
 | 工具 | 默认审批 | 说明 |
 |---|---|---|
 | `Read` | 自动 | 读文本；`path` + 可选 `line_offset`（支持负数）/`n_lines`；单次≤1000 行或 100KB，超出截断；图片/视频改用 `ReadMediaFile` |
-| `Write` | 审批 | `path`/`content`/`mode`(`overwrite`默认/`append`)；父目录须存在 |
+| `Write` | 审批 | `path`/`content`/`mode`(`overwrite`默认/`append`)；缺失父目录自动创建（v0.20 起；此前须父目录已存在） |
 | `Edit` | 审批 | 精确替换 `old_string`→`new_string`；默认唯一匹配，多处需 `replace_all:true`；两串不能相同 |
 | `Grep` | 自动 | ripgrep；`pattern`/`path`/`type`/`glob`/`output_mode`(`files_with_matches`默认/`content`/`count_matches`)；`content` 支持 `-A/-B/-C/-i/-n/multiline`；`offset`+`head_limit`(默认250,0=不限)；自动滤 `.env`/私钥，`include_ignored=true` 搜被忽略文件但仍滤敏感 |
 | `Glob` | 自动 | 按 glob `pattern` 在 `path`(默认 cwd) 匹配，按改时间倒序，≤1000；纯通配/花括号扩展会被拒 |
@@ -55,6 +55,8 @@ Plan 模式下 `Write`/`Edit` 只能写计划文件，`TaskStop` 被拦截，其
 | `Skill` | 自动 | 调已注册 **inline** Skill；`skill`+可选 `args`；仅 `type=inline`、非 `disableModelInvocation`；嵌套≤3 层 |
 
 ## 后台任务
+
+管理经 `Bash`/`Agent`/`AskUserQuestion` 启动的后台任务。任务进终止态时自动把状态+**已保存输出路径**回送 Agent（v0.20 起；此前回送末尾输出）；提前查进度用 `TaskOutput`。
 
 | 工具 | 默认审批 | 说明 |
 |---|---|---|

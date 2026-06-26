@@ -2,7 +2,7 @@
 
 官方更新日志：https://www.kimi.com/code/docs/kimi-code/whats-new.html
 
-**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.19.1（发布 2026-06-23，核对 2026-06-23；最新 minor v0.19.0 2026-06-22）。**
+**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.20.0（发布 2026-06-26，核对 2026-06-26）。**
 更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
 
 > ⚠️ 官方 what's-new 只列 minor 版本、且会滞后。**patch 版本与权威细节看源码仓库** `apps/kimi-code/CHANGELOG.md`（`MoonshotAI/kimi-code`）。源码核对（2026-06-17）发现站点漏掉的：
@@ -13,10 +13,18 @@
 
 ## 各版本要点（新→旧）
 
-### unreleased / main（尚未发版，截至 2026-06-23）
-> 源码 `origin/main` 已合入但 `apps/kimi-code/CHANGELOG.md` 顶部仍是 v0.19.1，**无发布日期，勿当已发布**。
-- **#999**：`--continue` 主短从 `-C` 改为 `-c`（`-C` 降为隐藏别名）。已在 `cli-reference.md` 标注「unreleased/main」，发版后转正。
-- 其余 main 增量（todo 列表 `Ctrl+T` 展开、bash 命令运行时展开、web ConversationToc 重构等）均为 TUI/web 交互项，**超出 subagent 底座范围**，不展开。
+### v0.20.0 — 2026-06-26
+- **Shell 模式**（#1079）：输入框首字符 `!` 进入，直接跑 shell 命令、**输出对 AI 可见**；长跑命令 `Ctrl+B` 转后台。典型用途如 `!gh auth login` 在不另开终端的前提下登录 GitHub CLI，让 kimi 随后能用 `gh`。（注：主要面向 TUI 交互，对 headless 委派意义有限。）
+- **写文件自动建父目录**（#1065）：Write 工具写文件时自动创建缺失的父目录——影响委派 kimi 落盘的行为预期。
+- 修复 **explore 子 agent 在 git 命令超时或目录非仓库时静默丢失 git 上下文**（#1067）——涉及内置 `explore` 子 agent 可靠性。
+- **第三方插件安装前新增确认提示**（#1088）；`/reload` 现会刷新 assistant 视角的插件 skills，插件改动当场生效、不必新开会话（#1086）。
+- 每轮步数上限报错新增指引，指向 `loop_control.max_steps_per_turn` 配置项（#1097）；保留被截断的完整工具输出日志，后台任务完成通知链接到已保存的输出（#1062）。
+- AGENTS.md 静默截断改为在 TUI 状态栏/web UI **显式告警**（#1040）。
+- ⚠️ 超出范围（仅标记不展开）：`/plugins` 重做为单面板分页 UI（#1025/#1066）、`kimi server`/web 的鉴权与 `--host`/`KIMI_CODE_PASSWORD`/`--insecure-no-tls` 公网暴露加固（#1006）、以及大量 web 聊天/任务查看器交互项（KaTeX 渲染、行级 diff、`Ctrl+U`/`Ctrl+D` 翻页等）均为 web/TUI 交互，不展开。
+
+### v0.19.2 — 2026-06-24
+- **`-c` 转正**：`-c` 作为 `--continue` 的简写正式发版（#999；`-C` 此前为主短，已降为隐藏别名）。`cli-reference.md` 中「unreleased/main」标注可转正。
+- ⚠️ 超出范围：其余为 web/TUI 交互与重构项（模型选择器 `Alt+S` 仅切当前会话、待办列表 `Ctrl+T` 展开、运行中 Bash 卡片 `Ctrl+O` 展开、大文件受控内存读取、web 侧栏拖放排序/折叠持久化等），仅标记不展开。
 
 ### v0.19.1 — 2026-06-23
 - 修复：ACP 编辑器（如 Zed）无法新建 thread；归档/删除会话时清空其全部状态；web 侧栏未读点跨标签同步。
@@ -112,3 +120,5 @@
 | `kimi web`/`/web` Web 模式、`kimi server` 本地服务 | v0.17.0 |
 | `KIMI_CODE_AGENT_SWARM_MAX_CONCURRENCY`、Web 会话搜索 | v0.18.0 |
 | `/add-dir`+`kimi --add-dir`、项目级 `.kimi-code/local.toml`、`Ctrl+B` 后台任务 | v0.19.0 |
+| `-c` 作为 `--continue` 简写正式发版（`-C` 降为隐藏别名） | v0.19.2 |
+| Shell 模式（`!` 前缀，输出对 AI 可见）、Write 自动建父目录、`/reload` 刷新插件 skills、第三方插件安装确认、`loop_control.max_steps_per_turn` 报错指引 | v0.20.0 |
