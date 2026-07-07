@@ -48,14 +48,16 @@ kimi -p "<完整、自包含的任务描述>" \
 
 ## 4. 多轮委派（续接同一子会话）
 
-- `-C/--continue`：续接**当前目录最近一次**会话。（unreleased/main #999 改主短为 `-c`）
+- `-c/--continue`：续接**当前目录最近一次**会话。（v0.19.2 起主短为 `-c`；`-C` 是隐藏别名）
 - `-S/--session <id>`：续接**指定 id** 的会话。
 - 典型用法：第一次 `kimi -p "..."` 派活拿到 session id（从 stream-json 中读取），后续用 `-S <id> -p "追加要求"` 继续，让子 agent 保留之前的上下文。
-- v0.14.2 起 `-C`/`-S` **可**与 `--auto`/`--yolo`/`--plan` 组合（模式应用到续接会话）；但 `-p` 仍与 `--yolo`/`--auto`/`--plan` 互斥（详见 `kimi-cli` 的互斥规则）。
+- v0.14.2 起 `-c`/`-S` **可**与 `--auto`/`--yolo`/`--plan` 组合（模式应用到续接会话）；但 `-p` 仍与 `--yolo`/`--auto`/`--plan` 互斥（详见 `kimi-cli` 的互斥规则）。
 
 ## 5. 并发委派与协作模式
 
 把彼此独立的子任务拆给多个 kimi 实例并行跑，全部完成后由宿主汇总。任务拆分、并发上限、汇总、失败重试、「何时该委派 vs 自己做」 → `references/patterns.md`。
+
+> v0.22.3 起，`kimi -p` 会等待后台子 agent 完成并消费其结果后再退出。若你在被派 kimi 内部显式启动后台任务并希望 print 模式退出前继续等待，可配 `[background] keep_alive_on_exit = true` 与 `print_wait_ceiling_s`；详见 `kimi-cli/references/config-files.md`。
 
 ## 6. 成败判断
 

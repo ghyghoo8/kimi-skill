@@ -27,11 +27,11 @@ irm https://code.kimi.com/kimi-code/install.ps1 | iex                 # Windows 
 npm install -g @moonshot-ai/kimi-code      # 或 pnpm add -g @moonshot-ai/kimi-code
 
 kimi --version      # 验证
-kimi upgrade        # 升级到最新
+kimi upgrade        # 升级到最新（kimi update 是别名）
 kimi migrate        # 迁移旧版 kimi-cli 数据
 ```
 
-> 校准锚点 **v0.20.0（2026-06-26）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
+> 校准锚点 **v0.23.0（tag 2026-07-06，核对 2026-07-07）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
 
 - 首次使用：进入后 `/login` 配置凭证（OAuth 设备码或 API key）。也可 `kimi login` 非交互登录。
 - Windows 需 Git for Windows；Git Bash 非默认路径时设 `KIMI_SHELL_PATH`。
@@ -43,7 +43,7 @@ kimi migrate        # 迁移旧版 kimi-cli 数据
 kimi                       # 启动交互式 TUI
 kimi -w /path/to/project   # 指定工作目录
 kimi -m kimi-k2.6          # 指定模型
-kimi -C                    # 续接当前目录最近会话（unreleased/main #999 改主短为 -c）
+kimi -c                    # 续接当前目录最近会话（v0.19.2 起；-C 为隐藏别名）
 kimi -S <id>               # 续接指定会话（或交互选择）
 kimi --plan                # 以 Plan 模式启动（先只读探索）
 kimi -y / --yolo           # 自动批准常规工具调用
@@ -71,7 +71,7 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 - `/compact [指令]` 压缩上下文省 token；按工作目录分组存储，**勿手改 `sessions/`**。
 - 导出：`/export-md [path]`（`/export`）导 Markdown；`kimi export [id]` 打包 ZIP；`/export-debug-zip` 调试包。
 - `/btw [问题]` 在分叉子 agent 里开侧聊不打断主线。
-- 会话存储结构、多轮 headless 续接（`-C`/`-S`）、`--add-dir`、Goal 的 `-p` 退出码 → `references/interaction.md`（已聚焦 subagent；纯交互 TUI 用法仅标记）。
+- 会话存储结构、多轮 headless 续接（`-c`/`-S`）、`--add-dir`、Goal 的 `-p` 退出码 → `references/interaction.md`（已聚焦 subagent；纯交互 TUI 用法仅标记）。
 
 ## 5. 斜杠命令
 
@@ -79,7 +79,7 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 
 ## 6. 插件与 MCP
 
-- **插件**：`/plugins` 交互式管理器；可从 marketplace、GitHub 仓库、zip URL 或本地路径安装；插件打包 Skills + MCP + 会话启动注入，安装显示信任等级（`kimi-official`/`curated`/`third-party`），**装插件不执行其中脚本**，仅对新会话生效。完整 manifest（`kimi.plugin.json`）、`/plugins` 子命令、存储与安全模型 → `references/plugins.md`。
+- **插件**：`/plugins` 交互式管理器；可从 marketplace、GitHub 仓库、zip URL 或本地路径安装；插件可打包 Skills、MCP、会话启动注入、插件斜杠命令与 hooks，安装显示信任等级（`kimi-official`/`curated`/`third-party`），插件变更可经 `/reload` 生效。完整 manifest（`kimi.plugin.json`）、`/plugins` 子命令、存储与安全模型 → `references/plugins.md`。
 - **MCP**：`/mcp` 查看服务器与连接状态；`/mcp-config` 对话式增改与鉴权（`/mcp-config login <server>`）。三种接入 stdio/HTTP/SSE，声明在 `~/.kimi-code/mcp.json` 或项目级 `.kimi-code/mcp.json`；工具名 `mcp__<server>__<tool>`。完整 schema 与字段 → `references/mcp.md`。
 - **钩子（Hooks）**：`config.toml` 的 `[[hooks]]`，「事件→脚本」自动化（如 `PreToolUse` 拦危险命令）；事件全表、stdin/退出码契约 → `references/hooks.md`。
 - 官方数据源插件 `kimi-datasource`（金融/宏观/企业/学术）→ 见 `kimi-datasource` 子 Skill。
@@ -93,14 +93,14 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 - 数据目录 `~/.kimi-code/`（可用 `KIMI_CODE_HOME` 覆盖）；配置 `config.toml` + `tui.toml`。
 - `kimi doctor [config|tui] [path]` 校验配置。
 - 模型供应商：`kimi provider add/remove/list`、`kimi provider catalog list/add`（从 models.dev 目录导入，如 `anthropic`/`openai`）→ 详见 `references/cli-reference.md`。
-- **配置项全表**（`[providers]` / `[models]` / `[thinking]` / `[loop_control]` / `[background]` / `[experimental]` / `[services]` / `[[permission.rules]]` / `[[hooks]]`、tui.toml）→ `references/config-files.md`。
+- **配置项全表**（`[providers]` / `[models]` / `[models."<alias>".overrides]` / `[thinking]` / `[loop_control]` / `[background]` / `[services]` / `[[permission.rules]]` / `[[hooks]]`、tui.toml）→ `references/config-files.md`。
 - **覆盖优先级、环境变量全表、数据目录结构** → `references/env-and-data.md`。要点：命令行（仅本次）＞ 用户 `config.toml`；普通参数不从 shell env 取回退；凭证只从 `config.toml` 读；`config.toml` 仍用户级一份，但 **v0.19 起有项目级 `.kimi-code/local.toml`**（`/add-dir` 写入）；完全隔离用 `KIMI_CODE_HOME`；临时模型走 `KIMI_MODEL_*`。
 - Skills 发现目录、`extra_skill_dirs`、`--skills-dir` 等细节 → `references/skills.md`。
 - **报错速查**（401 鉴权 / 429 限流配额 / 400 请求格式 / 404 模型端点 / 500 服务端 / 工具错误）→ `references/error-reference.md`。
 
 ## 8. 关键快捷键
 
-常用：`Esc` 中断流式 · `Ctrl-C` 停止（两次退出）· `Ctrl-S` 输出中插话 · `Ctrl-O` 折叠工具输出 · `@` 引文件。
+常用：`Esc` 中断流式；空闲时双击 `Esc` 打开撤销选择框 · `Ctrl-C` 停止（两次退出）· `Ctrl-S` 输出中插话 · `Ctrl-O` 折叠工具输出和压缩摘要 · `@` 引文件。
 > 键盘/输入等纯交互 TUI 操作与 subagent 底座定位无关，**不在此详列**（需要查官方 `reference/keyboard`）。
 
 ## 9. 典型用例

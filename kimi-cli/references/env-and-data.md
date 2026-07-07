@@ -59,17 +59,13 @@ kimi --yolo -p "批量重命名以下文件..."
 > ✅ **v0.12 起官方支持代理变量，大小写都认、含 SOCKS** —— 解决了旧版「Node fetch 只认大写、小写代理够不到 `auth.kimi.com` 续期」的坑。
 > **≤v0.11** 仍有该坑：需把小写镜像成大写，详见 `../../kimi-subagent/references/integration-troubleshooting.md` 第 3c 节。
 
-### 实验特性（覆盖 `[experimental]`）
-
-> **v0.12 起 Goal 模式 / 后台提问（background_ask）/ Sub-Skill 已正式发布**，无需实验开关；
-> **micro compaction 默认开启**。官方现仅列下面两个实验变量：
+### 实验特性
 
 | 变量 | 作用 |
 |---|---|
 | `KIMI_CODE_EXPERIMENTAL_FLAG` | 在当前进程启用**全部**已注册实验功能（`1/true/yes/on`） |
-| `KIMI_CODE_EXPERIMENTAL_MICRO_COMPACTION` | 覆盖 `[experimental].micro_compaction`（默认已开） |
 
-> ≤v0.11 另有 `KIMI_CODE_EXPERIMENTAL_GOAL_COMMAND` / `_BACKGROUND_ASK` / `_SUB_SKILL`；对应特性 v0.12 转正后这些变量从官方列表移除。见 `changelog.md`。
+> v0.12 起 Goal 模式 / 后台提问 / Sub-Skill 已正式发布，无需实验开关。v0.21 后 micro-compaction 已移除；旧的 `KIMI_CODE_EXPERIMENTAL_MICRO_COMPACTION` 不再是当前配置路径。v0.23 新增的 progressive tool disclosure 属实验能力，仍由内部实验 flag 控制，默认关闭。
 
 ### 临时模型（`KIMI_MODEL_*`，内存态、不落配置）
 
@@ -86,14 +82,12 @@ kimi --yolo -p "批量重命名以下文件..."
 | `KIMI_MODEL_DISPLAY_NAME` | `/model` 显示名 | 回退 `KIMI_MODEL_NAME` |
 | `KIMI_MODEL_MAX_OUTPUT_SIZE` | 单次输出上限（仅 Anthropic） | 模型默认 |
 | `KIMI_MODEL_REASONING_KEY` | 推理字段名覆盖（仅 OpenAI） | 自动探测 |
-| `KIMI_MODEL_DEFAULT_THINKING` | 默认 thinking 开关 | 全局默认 |
-| `KIMI_MODEL_THINKING_MODE` | thinking 触发策略 | `auto`/`on`/`off` |
 | `KIMI_MODEL_THINKING_EFFORT` | thinking 强度 | `low`/`medium`/`high`/`xhigh`/`max` |
 | `KIMI_MODEL_ADAPTIVE_THINKING` | 强制自适应 thinking（Anthropic） | 模型推断 |
 | `KIMI_MODEL_MAX_COMPLETION_TOKENS` | 每请求 `max_completion_tokens` 硬上限（仅 kimi 供应商） | `0`/负数＝不钳制 |
 | `KIMI_MODEL_TEMPERATURE` | 采样温度（仅 kimi，全局生效） | 如 `0.3` |
 | `KIMI_MODEL_TOP_P` | top_p（仅 kimi，全局生效） | 如 `0.95` |
-| `KIMI_MODEL_THINKING_KEEP` | Moonshot thinking 透传（须开 thinking） | 如 `all` |
+| `KIMI_MODEL_THINKING_KEEP` | Moonshot thinking 透传；覆盖 `[thinking] keep`（默认 `"all"`），仅对 kimi 供应商且 Thinking 开启时注入；`off`/`none`/`false`/`0` 等关值可禁用 | 如 `all` 或 `off` |
 
 ### 日志
 

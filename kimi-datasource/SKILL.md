@@ -18,7 +18,9 @@ whenToUse: |
 
 ## 一句话本质
 
-`kimi-datasource` 插件（`scripts/query_stock.py` / `bin/kimi-datasource.mjs`）= 读凭证 → `POST https://api.kimi.com/coding/v1/tools`，body `{"method": ..., "params": ...}`，带 `Authorization: Bearer <token>` + 一组 `X-Msh-*` 头。**没有任何本地数据逻辑，全在网关后端。** 所以宿主程序可以**完全甩开插件/CLI，自己直连网关**。
+`kimi-datasource` managed 插件（v3.2.0，`bin/kimi-datasource.mjs`）= 读 Kimi Code OAuth 凭证 → `POST <KIMI_CODE_BASE_URL>/tools`，body `{"method": ..., "params": ...}`，带 `Authorization: Bearer <token>` + 一组 `X-Msh-*` 头。**没有任何本地数据逻辑，全在网关后端。** 所以宿主程序可以**完全甩开插件/CLI，自己直连网关**。
+
+> 当前 managed MCP 只暴露两个工具：`get_data_source_desc` 与 `call_data_source_tool`。旧的 `query_stock` / `get_stock_realtime_price` 快捷路径已不再是插件入口；直连封装也应优先走“先 desc、再 call”的通用流程。
 
 ## 鉴权真相（源码实测，纠正官方"必须 OAuth"的说法）🔴
 
@@ -27,18 +29,19 @@ whenToUse: |
 | 凭证 | 形态 | 寿命 | 来源 |
 |---|---|---|---|
 | **静态 API key**（推荐程序化用）| `sk-kimi-...` | **永不过期** | `config.toml` 的 `api_key` / 环境变量 `KIMI_API_KEY` |
-| OAuth access_token | JWT | **15 分钟**（陷阱）| `~/.kimi-code/credentials/kimi-code.json`，`kimi login` 写入 |
+| OAuth access_token | JWT | **15 分钟**（陷阱）| `~/.kimi-code/credentials/kimi-code.json` 或环境隔离凭证，`kimi login` 写入 |
 
-- **官方/managed 插件用 OAuth JWT，且源码里显式校验 `expires_at` 过期就抛 `access_token expired`**——这就是 headless/subprocess 下"登录后只有 15 分钟可用、之后全失败"的根因（refresh_token 虽有效，但非交互态不触发静默续期）。
+- **官方/managed 插件用 OAuth JWT，且源码里显式校验 `expires_at` 过期就抛 `access_token expired`**——这就是 headless/subprocess 下"登录后只有 15 分钟可用、之后全失败"的根因（refresh_token 虽有效，但非交互态不触发静默续期）。若设置 `KIMI_CODE_OAUTH_HOST` / `KIMI_CODE_BASE_URL`，凭证文件名会变成 `kimi-code-env-<hash>.json`，与当前 Kimi Code 环境隔离。
 - **直连网关时改用静态 API key（`Bearer sk-kimi-...`）即可彻底规避**：永不过期、不依赖 `kimi login`、不需要 `KIMI_CODE_HOME`、不需要代理可达 `auth.kimi.com`。
 
-## 三个网关 method
+## 当前推荐的两个网关 method
 
 | method | 用途 |
 |---|---|
-| `get_stock_realtime_price` | 直查 A股/港股 实时价 + 分钟线 / 技术指标（legacy 直达接口）|
 | `get_data_source_desc` | 取某数据源的 API 目录（参数 `{"name": "<源名>"}`）|
 | `call_data_source_tool` | 通用调度：`{"data_source_name", "api_name", "params"}` 调任意源的任意 API |
+
+旧版曾有 `get_stock_realtime_price` / `query_stock` 快捷入口；managed 插件 3.1.0 起已移除快捷工具，统一要求先 `get_data_source_desc` 再 `call_data_source_tool`。不要把 legacy method 当成当前封装主路径。
 
 ## 七个数据源（`get_data_source_desc` 的 enum）
 
@@ -54,9 +57,9 @@ KEY = os.environ["KIMI_API_KEY"]                    # sk-kimi-...，永不过期
 def gw(method, params):
     body = json.dumps({"method": method, "params": params}).encode()
     hdr = {"Authorization": f"Bearer {KEY}", "Content-Type": "application/json",
-           "X-Msh-Tool-Call-Id": str(uuid.uuid4()), "X-Msh-Platform": "kimi_cli",
-           "X-Msh-Version": "kimi-datasource", "X-Msh-Device-Id": "kimi-datasource",
-           "User-Agent": "kimi-datasource/2.0"}
+           "X-Msh-Tool-Call-Id": str(uuid.uuid4()), "X-Msh-Platform": "kimi-code-cli",
+           "X-Msh-Version": "3.2.0", "X-Msh-Device-Id": "kimi-datasource",
+           "User-Agent": "kimi-datasource/3.2.0"}
     req = urllib.request.Request("https://api.kimi.com/coding/v1/tools",
                                  data=body, headers=hdr, method="POST")
     return json.loads(urllib.request.urlopen(req, timeout=30).read())
@@ -69,7 +72,8 @@ gw("call_data_source_tool", {"data_source_name": "stock_finance_data",
               "format": "json"}})
 ```
 
-返回 `{"is_success": true, "result": {"user": [{"type":"text","text": "<JSON: data_preview=CSV>"}], ...}}`，
+返回通常是 `{"is_success": true, "result": {"user": [{"type":"text","text": "<JSON/CSV 预览>"}], ...}, "files": [...]}`。
+managed 插件会把 `files[]` 写回 `params.file_path` 或同目录同后缀的分片文件，并在工具输出末尾附加 `[kimi-datasource] request-id ... tool-call-id ...` 便于后端排查。直连封装应保留这两个能力：解析 `result.user/assistant[].text`，并按 `files[]` 写盘。
 原始字段是同花顺 iFinD 口径（`ths_*_stock`，如 `ths_roe_stock` ROE、`ths_net_sales_rate_stock` 净利率）。
 完整字段表 + 各 API 参数见 [references/gateway-api.md](references/gateway-api.md)。
 
@@ -81,7 +85,7 @@ gw("call_data_source_tool", {"data_source_name": "stock_finance_data",
 ## 程序化调用的两个老坑（直连可同时规避）
 
 1. **自然语言查"最近一期"会选错报告期** 🔴：经 LLM 中转时 agent 常把报告期设成去年同期还自称"最新"。→ **直连时显式传 `financial_parameter=20260331`**，根治。
-2. **`text` 输出是 LLM 整理后文字**，带认知偏差。→ 直连拿 `result.user[].text` 里的原始 CSV/JSON，不经 LLM 润色。
+2. **`text` 输出是 LLM 整理后文字**，带认知偏差。→ 直连拿 `result.user/assistant[].text` 与 `files[]` 里的原始 CSV/JSON，不经 LLM 润色。
 
 ## 使用规范
 

@@ -2,8 +2,8 @@
 
 官方更新日志：https://www.kimi.com/code/docs/kimi-code/whats-new.html
 
-**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.20.0（发布 2026-06-26，核对 2026-06-26）。**
-更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
+**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.23.0（tag 2026-07-06，核对 2026-07-07）。**
+更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `AGENTS.md` / `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
 
 > ⚠️ 官方 what's-new 只列 minor 版本、且会滞后。**patch 版本与权威细节看源码仓库** `apps/kimi-code/CHANGELOG.md`（`MoonshotAI/kimi-code`）。源码核对（2026-06-17）发现站点漏掉的：
 > - **Node 要求 24.15.0 → 22.19.0**（#622）。
@@ -12,6 +12,63 @@
 > - datasource 插件 **v3.2.0**，装后不自动更新、需重装升级（#646）。
 
 ## 各版本要点（新→旧）
+
+### v0.23.0 — 2026-07-06
+- **Preserved Thinking 默认开启**（#1417）：Kimi 模型在 Thinking 开启时默认保留历史 `reasoning_content`，跨轮推理更连续但会增加输入 token。用 `[thinking] keep = "off"` 或 `KIMI_MODEL_THINKING_KEEP=off` 禁用。
+- **实验性 progressive tool disclosure**（#1369）：新增 `select_tools` 能力，`tool-select` 实验 flag 打开且模型支持时，MCP 工具 schema 不再全部放入顶层 `tools[]`，模型按需通过内置 `select_tools` 精确加载。默认关闭，对当前不支持模型无行为变化。
+- **AskUserQuestion 回灌格式优化**（#1414）：答案回灌给模型时使用问题文本和选项 label，而不是 `q_0`/`opt_0_1` 这类合成 id；问题文本和同题选项 label 需唯一。
+- 修复 `@` 文件补全在大型项目额外工作目录下漏掉深层文件；修复 Gemini 工具调用和 Gemini 3 thinking-signature 跨轮回传。
+- ⚠️ 超出范围：归档会话 API / web 归档页、swarm web 卡片、web UI 视觉与布局修复，仅标记不展开。
+
+### v0.22.3 — 2026-07-04
+- **`kimi -p` 等后台子 agent 结果后再退出**（#1371）：避免 print 模式主轮提前结束、后台子 agent 结果未被消费。
+- `kimi server run` 新增 `--keep-alive` 与 `--dangerous-bypass-auth`（#1373）。后者会关闭 REST/WebSocket bearer token 鉴权，仅可信网络或自有鉴权代理后使用。
+- ⚠️ 超出范围：上传图片点击放大、视频播放修复、TUI transcript 渲染回退等交互项。
+
+### v0.22.2 — 2026-07-03
+- **print 模式后台等待配置**（#1347）：`background.keep_alive_on_exit = true` 时，`kimi -p` 退出前等待后台任务完成；`print_wait_ceiling_s` 控制最长等待。
+- **compaction 交接摘要增强**（#1342）：记录后续步骤、已定决策和可预见障碍，自动压缩后更容易继续。
+- 启动时从用户登录 shell 补充 PATH（#1339），减少 shell 命令找不到用户安装工具的问题。
+- **`tui.disable_paste_burst`**（#1305）：当 bracketed paste 不可用时，避免快速多行粘贴被逐行提交。
+- 修复工具调用 id 重复、被中断后后续消息丢失、Windows `kimi upgrade` spawn 错误、压缩图片泄露内部 `<system>` 说明等。
+
+### v0.22.1 — 2026-07-02
+- Shell 模式新增命令历史召回：空 `!` 提示符按 `↑` 浏览此前运行过的 Shell 命令。
+- 改进 compaction 交接摘要，保留最新意图、关键工具结果、决策、待解答问题和需复查上下文。
+- **移除实验性 micro-compaction** 及实验面板开关。
+- 修复窄终端/CJK/emoji 渲染崩溃、屏幕空白、会话切换清屏等 TUI 稳定性问题。
+
+### v0.22.0 — 2026-07-02
+- **模型覆盖配置**：新增 `[models."<alias>".overrides]`，用于在 provider-model 刷新后保留用户覆盖的模型元数据。
+- 自动压缩超大图片：送达模型前降采样/重编码，降低视觉 token 成本并避免供应商图片大小错误。
+- 对支持多档思考强度的 always-on 模型，在 `/model` thinking 切换器中隐藏不支持的 Off 选项。
+- ⚠️ 超出范围：web UI 新设计系统、会话搜索命令面板、工具卡片视觉归组等 web/TUI 交互项。
+
+### v0.21.1 — 2026-07-01
+- 修复加密推理流式输出期间，首个响应文本出现前等待 spinner 消失后留下空白的问题。
+
+### v0.21.0 — 2026-07-01
+- **插件斜杠命令**：plugin manifest 新增 `commands` 字段，可把 Markdown 提示词注册为 `/plugin:command`，支持 `$ARGUMENTS`。
+- **Thinking 配置重构**：`default_thinking` 与 `thinking.mode` 废弃，改用 `[thinking].enabled`；Thinking effort 系统重构。
+- 新增空闲时双击 `Esc` 打开撤销选择器；Shell 模式下输入 `/` 显示文件路径补全。
+- 压缩机制重构：修复严格供应商对 `tool_use`/`tool_result` 相邻关系、Gemini/Vertex 轮次交替的要求；micro-compaction 默认关闭并在后续移除。
+- 修复 `kimi -p` 完成后因残留句柄不退出的问题，并为 prompt 清理增加时限。
+
+### v0.20.3 — 2026-06-30
+- Glob 改用 ripgrep：默认遵循 ignore 文件，支持花括号模式，结果上限调整并在部分目录不可读时保留已有结果和 warning。
+- 后台自动刷新供应商模型列表，新上架模型无需重启即可显示。
+- 修复供应商返回 HTML 错误页时 TUI 错误消息为空白。
+
+### v0.20.2 — 2026-06-29
+- 插件 manifest 支持 `hooks`，启用插件后可在生命周期事件上运行脚本。
+- `/feedback` 支持附加诊断日志与代码库上下文。
+- `kimi web` 新增 `--allowed-host`，403 DNS rebinding 错误会提示放行方式。
+- 优化默认系统提示词与内置工具描述，避免 agent 阻塞应后台运行的任务，并补充工具结果详情。
+
+### v0.20.1 — 2026-06-27
+- 新增 `kimi update`，等价于 `kimi upgrade`。
+- chat-completions 供应商的 `max_tokens` 不超过剩余上下文窗口，避免上下文溢出与无效参数错误。
+- 折叠待办面板时显示隐藏待办的完成/进行中/待处理明细。
 
 ### v0.20.0 — 2026-06-26
 - **Shell 模式**（#1079）：输入框首字符 `!` 进入，直接跑 shell 命令、**输出对 AI 可见**；长跑命令 `Ctrl+B` 转后台。典型用途如 `!gh auth login` 在不另开终端的前提下登录 GitHub CLI，让 kimi 随后能用 `gh`。（注：主要面向 TUI 交互，对 headless 委派意义有限。）
@@ -23,7 +80,7 @@
 - ⚠️ 超出范围（仅标记不展开）：`/plugins` 重做为单面板分页 UI（#1025/#1066）、`kimi server`/web 的鉴权与 `--host`/`KIMI_CODE_PASSWORD`/`--insecure-no-tls` 公网暴露加固（#1006）、以及大量 web 聊天/任务查看器交互项（KaTeX 渲染、行级 diff、`Ctrl+U`/`Ctrl+D` 翻页等）均为 web/TUI 交互，不展开。
 
 ### v0.19.2 — 2026-06-24
-- **`-c` 转正**：`-c` 作为 `--continue` 的简写正式发版（#999；`-C` 此前为主短，已降为隐藏别名）。`cli-reference.md` 中「unreleased/main」标注可转正。
+- **`-c` 转正**：`-c` 作为 `--continue` 的简写正式发版（#999；`-C` 此前为主短，已降为隐藏别名）。
 - ⚠️ 超出范围：其余为 web/TUI 交互与重构项（模型选择器 `Alt+S` 仅切当前会话、待办列表 `Ctrl+T` 展开、运行中 Bash 卡片 `Ctrl+O` 展开、大文件受控内存读取、web 侧栏拖放排序/折叠持久化等），仅标记不展开。
 
 ### v0.19.1 — 2026-06-23
@@ -122,3 +179,8 @@
 | `/add-dir`+`kimi --add-dir`、项目级 `.kimi-code/local.toml`、`Ctrl+B` 后台任务 | v0.19.0 |
 | `-c` 作为 `--continue` 简写正式发版（`-C` 降为隐藏别名） | v0.19.2 |
 | Shell 模式（`!` 前缀，输出对 AI 可见）、Write 自动建父目录、`/reload` 刷新插件 skills、第三方插件安装确认、`loop_control.max_steps_per_turn` 报错指引 | v0.20.0 |
+| `kimi update` 别名、插件 hooks、`/feedback` 附加诊断、Glob 使用 ripgrep 并支持花括号模式 | v0.20.1–v0.20.3 |
+| 插件斜杠命令、双击 `Esc` 撤销选择器、Thinking 配置改为 `[thinking].enabled`、`default_thinking`/`thinking.mode` 废弃 | v0.21.0 |
+| 模型覆盖 `[models."<alias>".overrides]`、超大图片压缩、移除 micro-compaction、Shell 命令历史召回、`background.print_wait_ceiling_s`、`tui.disable_paste_burst` | v0.22.0–v0.22.2 |
+| `kimi -p` 等后台子 agent 结果后再退出、`kimi server run --keep-alive`/`--dangerous-bypass-auth` | v0.22.3 |
+| Preserved Thinking 默认开启（`[thinking] keep = "off"` 可关）、实验性 progressive tool disclosure (`select_tools`) | v0.23.0 |

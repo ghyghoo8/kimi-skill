@@ -22,7 +22,6 @@
 | 字段 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `default_model` | string | — | **必填**，模型别名（须在 `[models]` 中定义） |
-| `default_thinking` | bool | `false` | 新会话默认开 thinking |
 | `default_permission_mode` | string | `manual` | `manual` / `auto` / `yolo` |
 | `default_plan_mode` | bool | `false` | 以「先规划后执行」模式启动 |
 | `merge_all_available_skills` | bool | `true` | 合并所有目录的 Skills |
@@ -74,6 +73,8 @@ KIMI_BASE_URL = "https://api.moonshot.ai/v1"
 | `max_context_size` | int | ✅ | 最大上下文 token（≥1） |
 | `max_output_size` | int | | 输出 token 上限（Anthropic 专用） |
 | `capabilities` | array<string> | | 能力标签：`thinking` / `image_in` / `video_in` / `audio_in` / `tool_use` |
+| `support_efforts` | array<string> | | 模型目录声明的 Thinking 档位；刷新可能改写，手动固定请放到 `overrides` |
+| `default_effort` | string | | 模型默认 Thinking 档位；刷新可能改写，手动固定请放到 `overrides` |
 | `display_name` | string | | UI 显示名（缺省取 `model`） |
 | `reasoning_key` | string | | 仅 OpenAI；非标准推理字段名 |
 | `adaptive_thinking` | bool | | 仅 Anthropic；强制自适应 thinking 开/关 |
@@ -85,14 +86,32 @@ model = "gpt-4.1"
 max_context_size = 1047576
 ```
 
-### `[thinking]` — 全局 thinking 默认
+### 模型覆盖项（v0.22）
 
-`mode = "off"` 会覆盖 `default_thinking = true`。
+供应商模型刷新会改写 `[models.<alias>]` 的目录字段。需要长期保留的用户覆盖写到 `[models."<alias>".overrides]`；运行时有 override 就用 override，否则用顶层字段。
+
+```toml
+[models."kimi-code/kimi-for-coding"]
+provider = "managed:kimi-code"
+model = "kimi-for-coding"
+max_context_size = 262144
+
+[models."kimi-code/kimi-for-coding".overrides]
+max_context_size = 131072
+display_name = "Kimi for Coding (custom)"
+```
+
+`overrides` 可覆盖普通模型字段：`max_context_size`、`max_output_size`、`capabilities`、`display_name`、`reasoning_key`、`adaptive_thinking`、`support_efforts`、`default_effort`。不可覆盖身份/路由字段：`provider`、`model`、`protocol`、`beta_api`。
+
+### `[thinking]` — 全局 thinking 默认
 
 | 字段 | 类型 | 默认 | 取值 |
 |---|---|---|---|
-| `mode` | string | — | `auto` / `on` / `off` |
-| `effort` | string | `high` | `low` / `medium` / `high` / `xhigh` / `max` |
+| `enabled` | bool | `true` | 新会话是否默认开启 Thinking；`false` 强制关闭 |
+| `effort` | string | — | `low` / `medium` / `high` / `xhigh` / `max` 等，实际取决于模型 `support_efforts` |
+| `keep` | string | `"all"` | Kimi 模型保留历史 `reasoning_content` 的透传设置；`off`/`none`/`false`/`0` 等关值可禁用 |
+
+已废弃字段：v0.21 起 `default_thinking` 改为 `[thinking].enabled`；`thinking.mode = "off"` 改为 `enabled = false`，`mode = "on"` / `"auto"` 等价于默认开启。
 
 ### `[loop_control]` — Agent 执行循环
 
@@ -107,20 +126,16 @@ max_context_size = 1047576
 | 字段 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `max_running_tasks` | int | — | 最大并发后台任务数 |
-| `keep_alive_on_exit` | bool | `true` | 退出会话时保留运行中任务 |
+| `keep_alive_on_exit` | bool | `false` | 退出会话时保留运行中任务；print 模式下为 `true` 时会在退出前等待后台任务跑完 |
+| `print_wait_ceiling_s` | int | `3600` | `kimi -p` 且 `keep_alive_on_exit = true` 时，主 turn 结束后等待后台任务的最长秒数 |
 
 `keep_alive_on_exit` 可被环境变量 `KIMI_CODE_BACKGROUND_KEEP_ALIVE_ON_EXIT` 覆盖（env 优先）。
 
+v0.22.2 起：在 print 模式（`kimi -p "<prompt>"`）中，如果被派 kimi 内部启动了后台任务（如后台子 agent）并希望它们完成，设置 `keep_alive_on_exit = true`。否则主 turn 结束时后台任务会随进程清理。v0.22.3 起普通 `kimi -p` 会等待后台子 agent 完成并响应其结果后再退出，避免提前结束本轮。
+
 ### `[experimental]` — 实验特性开关
 
-**v0.12 起目前仅剩一个用户可见字段**（`goal_command` / `background_ask` / `sub_skill` 均已正式发布、移出实验）：
-
-| 字段 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `micro_compaction` | bool | `true` | 清理较旧的大型工具结果、保留最近对话；仅在想关闭自动清理时设 `false` |
-
-可直接改或用 TUI `/experiments`；环境变量 `KIMI_CODE_EXPERIMENTAL_MICRO_COMPACTION` 优先。
-（≤v0.11 该表还有 `goal_command`/`background_ask`/`sub_skill`，默认 `false`；现已转正，见 `changelog.md`。）
+实验字段会随版本变化；v0.21 后 micro-compaction 已移除，不再记录 `[experimental].micro_compaction`。
 
 ### `[services]` — 内置服务
 
@@ -172,6 +187,7 @@ timeout = 5
 | 字段 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `theme` | string | `auto` | `auto` / `dark` / `light` |
+| `disable_paste_burst` | bool | `false` | 禁用非 bracketed paste 的粘贴突发兜底；默认开启以避免快速多行粘贴被逐行提交 |
 | `[editor].command` | string | `""` | 长输入用的外部编辑器；回退 `$VISUAL`/`$EDITOR` |
 | `[notifications].enabled` | bool | `true` | 桌面通知 |
 | `[notifications].notification_condition` | string | `unfocused` | `unfocused` / `always` |

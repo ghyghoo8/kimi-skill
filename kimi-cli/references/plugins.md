@@ -9,10 +9,12 @@ Plugin 把可复用的 Kimi Code CLI 能力打包成**可安装单元**。可包
 - **Skills**：插件内指定目录的 `SKILL.md`，与普通 Agent Skill 同格式。
 - **MCP 服务器**：stdio（本地命令）与 HTTP（远程服务）声明。
 - **会话启动注入**：会话开始时自动加载指定 Skill（仅注入文本，不执行代码）。
+- **插件斜杠命令**：把 Markdown 提示词注册成 `/plugin:command`。
+- **插件 Hooks**：插件启用期间运行生命周期 hook。
 - **元数据**：展示信息、描述、作者等。
 
-> **保守加载**：安装插件**不会**执行其中的 Python / Node / Shell / hook / 命令脚本。
-> 不支持的运行时字段（`tools`、`commands`、`hooks`、`apps`、`inject`、`configFile` 等）会以 diagnostics 显示并忽略。
+> **保守加载**：安装插件本身不会执行其中的 Python / Node / Shell / 命令型旧工具。插件 hooks 只在插件启用后、匹配生命周期事件时运行。
+> 不支持的运行时字段（`tools`、`apps`、`inject`、`configFile` 等）会以 diagnostics 显示并忽略。
 
 ## 安装
 
@@ -124,8 +126,36 @@ Plugin 把可复用的 Kimi Code CLI 能力打包成**可安装单元**。可包
 | `sessionStart.skill` | 会话/恢复开始时加载指定 Skill |
 | `skillInstructions` | 加载该插件 Skill 时附加的额外指令（无论经 `sessionStart`、`/skill:<name>` 还是模型自动调用都会随之出现） |
 | `mcpServers` | MCP 服务器声明（默认启用，可经 `/plugins` 禁用） |
+| `commands` | 一个或多个插件根内的 `./` 目录或 `.md` 文件，注册为插件斜杠命令 |
+| `hooks` | 生命周期 hook 规则；字段同 `config.toml` 的 `[[hooks]]` |
 
 `interface` 对象：`displayName` / `shortDescription` / `longDescription` / `developerName` / `websiteURL`。
+
+## 插件斜杠命令（v0.21）
+
+`commands` 把 Markdown 提示词注册成命令，命令名自动带插件 id 前缀，形如 `/kimi-finance:report`。
+
+```json
+{
+  "name": "kimi-finance",
+  "version": "1.0.0",
+  "commands": "./commands/"
+}
+```
+
+`commands/report.md`：
+
+```markdown
+---
+description: 拉取指定股票的财报并总结
+---
+
+拉取 $ARGUMENTS 的最新财报数据，总结营收、利润和关键风险。
+```
+
+- `commands` 可指向目录（递归收集 `.md`）或单个 `.md` 文件；无效路径以 diagnostics 显示并忽略。
+- frontmatter 可写 `name` / `description`。省略 `name` 时用相对路径命名，省略 `description` 时取正文首行。
+- 调用时，命令后文本替换正文里的 `$ARGUMENTS`；若正文没写 `$ARGUMENTS`，参数会以 `ARGUMENTS: ...` 追加到末尾。
 
 ## 目录结构示例
 
@@ -164,9 +194,31 @@ HTTP（远程服务）：
 - stdio 的 `command` 可为 `PATH` 命令或以 `./` 开头的插件根相对路径；`cwd` 也须以 `./` 开头且不出插件根，否则该服务器被忽略。
 - 插件 MCP 服务器在 `/reload` 后或新会话启动（v0.20 前为「只在新会话启动」），可随时禁用。启用/禁用某 server 后运行 `/reload` 即可生效。
 
+## 插件中的 Hooks（v0.21）
+
+plugin 可在 manifest 中声明 hook 规则，字段与 `config.toml` 的 `[[hooks]]` 相同：
+
+```json
+{
+  "hooks": [
+    {
+      "event": "PreToolUse",
+      "matcher": "Bash",
+      "command": "node ./hooks/check-bash.mjs",
+      "timeout": 5
+    }
+  ]
+}
+```
+
+- 仅在 plugin 启用期间生效；禁用 plugin 后停止运行。
+- 每条 hook 的工作目录为 plugin 根目录，所以 `command` 可使用 plugin 内的 `./` 路径。
+- hook 进程会额外收到 `KIMI_CODE_HOME` 与 `KIMI_PLUGIN_ROOT`。
+- 事件列表、stdin JSON、退出码/返回值影响主流程的规则见 `hooks.md`。
+
 ## 安全模型
 
-- 不执行命令型插件工具、hook 或旧式工具运行时。
+- 安装时不执行命令型插件工具或旧式工具运行时；hooks 仅在插件启用且事件匹配时运行。
 - 所有路径在符号链接解析后须留在插件根内。
 - 已启用 MCP 服务器在 `/reload` 后或新会话启动，可随时禁用。
 - 损坏的 manifest 或不安全路径在 `/plugins info <id>` 的 diagnostics 显示，不影响其它会话。

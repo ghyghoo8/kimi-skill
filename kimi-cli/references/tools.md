@@ -12,7 +12,7 @@
 | `Write` | 审批 | `path`/`content`/`mode`(`overwrite`默认/`append`)；缺失父目录自动创建（v0.20 起；此前须父目录已存在） |
 | `Edit` | 审批 | 精确替换 `old_string`→`new_string`；默认唯一匹配，多处需 `replace_all:true`；两串不能相同 |
 | `Grep` | 自动 | ripgrep；`pattern`/`path`/`type`/`glob`/`output_mode`(`files_with_matches`默认/`content`/`count_matches`)；`content` 支持 `-A/-B/-C/-i/-n/multiline`；`offset`+`head_limit`(默认250,0=不限)；自动滤 `.env`/私钥，`include_ignored=true` 搜被忽略文件但仍滤敏感 |
-| `Glob` | 自动 | 按 glob `pattern` 在 `path`(默认 cwd) 匹配，按改时间倒序，≤1000；纯通配/花括号扩展会被拒 |
+| `Glob` | 自动 | 按 glob `pattern` 在 `path`(默认 cwd) 匹配，按改时间倒序，≤100；默认尊重 `.gitignore`/`.ignore`/`.rgignore`，`include_ignored=true` 可纳入被忽略文件但仍滤敏感；支持 `*.{ts,tsx}` 花括号模式，宽泛通配可能在上限处截断 |
 | `ReadMediaFile` | 自动 | 图片/视频多模态发给模型；仅 `path`，≤100MB；依赖模型 `image_in`/`video_in` |
 
 ## Shell
@@ -27,7 +27,7 @@
 
 | 工具 | 默认审批 | 说明 |
 |---|---|---|
-| `WebSearch` | 自动 | `query` + 可选 `limit`(1–20,默认5)/`include_content`(默认false)；**需宿主注入实现**，否则不出现在工具列表 |
+| `WebSearch` | 自动 | `query`；**需宿主注入实现**，否则不出现在工具列表 |
 | `FetchURL` | 自动 | 单 `url`；HTML 抽正文、纯文本/MD 透传；**需宿主注入实现** |
 
 ## Plan 模式

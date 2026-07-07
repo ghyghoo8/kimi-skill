@@ -47,7 +47,7 @@
 | `kimi doctor [config\|tui] [path]` | 校验 `config.toml` / `tui.toml` |
 | `kimi export [id]` | 打包会话为 ZIP |
 | `kimi migrate` | 迁移旧版 kimi-cli 数据到 kimi-code |
-| `kimi upgrade` | 检查并安装更新 |
+| `kimi upgrade` / `kimi update` | 检查并安装更新（`update` 为别名，v0.20.1 起） |
 | `kimi provider <action>` | 供应商管理（见下） |
 | `kimi acp` | IDE 集成（ACP）— ⚠️ 交互式，**超出 subagent 底座范围**，不展开 |
 | `kimi vis [id]` | 浏览器会话可视化 — ⚠️ 交互式，**超出范围**，不展开 |
@@ -135,7 +135,8 @@ Shell 内管理供应商，等价于非交互的 TUI `/provider`。
 | `Ctrl-C` | 停止输出；连按两次退出 |
 | `Shift-Tab` | 切换 Plan 模式 |
 | `Ctrl-S` | 输出过程中插入消息 |
-| `Ctrl-O` | 折叠 / 展开工具输出 |
+| `Ctrl-O` | 折叠 / 展开工具输出和压缩摘要 |
+| `Esc` `Esc` | 空闲状态下双击打开撤销选择框（v0.21） |
 | `Ctrl-T` | 待办列表被截断时，展开 / 折叠完整列表（**v0.19.2 起**） |
 | `!` | 空输入框中键入进入 Shell 模式，直接运行终端命令；命令运行期间按 `Ctrl+B` 转后台任务（**v0.20.0 起**） |
 
