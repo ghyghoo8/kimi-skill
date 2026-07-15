@@ -19,9 +19,9 @@
 
 ```bash
 # 三个独立子任务并行；各自落盘，wait 后汇总
-kimi -p "$T1" --output-format stream-json --auto -w /repo 1>r1.jsonl 2>/dev/null &
-kimi -p "$T2" --output-format stream-json --auto -w /repo 1>r2.jsonl 2>/dev/null &
-kimi -p "$T3" --output-format stream-json --auto -w /repo 1>r3.jsonl 2>/dev/null &
+kimi -p "$T1" --output-format stream-json -w /repo 1>r1.jsonl 2>/dev/null &
+kimi -p "$T2" --output-format stream-json -w /repo 1>r2.jsonl 2>/dev/null &
+kimi -p "$T3" --output-format stream-json -w /repo 1>r3.jsonl 2>/dev/null &
 wait
 # 读取 r1/r2/r3 末行结论，宿主合并
 ```
@@ -43,7 +43,7 @@ wait
 
 ```bash
 # 轮 1：探索并产出方案（拿到 session id 见 headless-output.md）
-kimi -p "在 /repo 探索鉴权模块，输出重构方案" --output-format stream-json --auto -w /repo
+kimi -p "在 /repo 探索鉴权模块，输出重构方案" --output-format stream-json -w /repo
 # 轮 2：基于上一轮结论实施
 kimi -S <id> -p "按上一轮方案实施重构，最后输出改动文件清单 JSON"
 ```

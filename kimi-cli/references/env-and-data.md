@@ -30,8 +30,8 @@
 ```sh
 # 测试环境隔离
 KIMI_CODE_HOME="$PWD/.kimi-sandbox" kimi
-# 批量免确认
-kimi --yolo -p "批量重命名以下文件..."
+# 非交互模式固定使用 auto 权限，无需也不能再加 --auto/--yolo
+kimi -p "批量重命名以下文件..."
 ```
 
 ## 二、环境变量全表
@@ -45,13 +45,16 @@ kimi --yolo -p "批量重命名以下文件..."
 | `KIMI_CODE_OAUTH_HOST` | OAuth 主机（最高优先） | 回退 `KIMI_OAUTH_HOST` |
 | `KIMI_OAUTH_HOST` | OAuth 主机回退 | `https://auth.kimi.com` |
 | `KIMI_CODE_BASE_URL` | 登录后托管 API base（≠ `KIMI_BASE_URL`） | `https://api.kimi.com/coding/v1` |
-| `KIMI_CODE_BACKGROUND_KEEP_ALIVE_ON_EXIT` | 退出保留后台任务（覆盖 config） | `1/true/yes/on` ↔ `0/false/no/off` |
+| `KIMI_CODE_BACKGROUND_KEEP_ALIVE_ON_EXIT` | 退出保留后台任务（覆盖 config）；print 模式仅作 `print_background_mode` 未设置时的兼容回退 | `1/true/yes/on` ↔ `0/false/no/off` |
+| `KIMI_IMAGE_MAX_EDGE_PX` | 图片压缩最长边，覆盖 `[image] max_edge_px` | 正整数；默认 `2000` |
+| `KIMI_IMAGE_READ_BYTE_BUDGET` | `ReadMediaFile` 默认读图单图预算，覆盖 `[image] read_byte_budget` | 正整数；默认 `262144`（256KB） |
 | `KIMI_CODE_PLUGIN_MARKETPLACE_URL` | 覆盖 `/plugins` 加载的插件市场 JSON（适合 dev loopback server、测试 CDN 文件或替换 marketplace 目录） | 默认 `https://code.kimi.com/kimi-code/plugins/marketplace.json`；也接受 `http://`/`file://` URL 和本地路径 |
 | `KIMI_SHELL_PATH` | Windows 下 Git Bash 路径覆盖 | 绝对路径 |
 | `KIMI_CODE_NO_AUTO_UPDATE` | 完全关闭更新预检（旧名 `KIMI_CLI_NO_AUTO_UPDATE`） | `1`/`true`/`yes`/`on` |
 | `KIMI_DISABLE_CRON` | 关 cron 调度工具（拒绝新调度，不触发已有） | `1` |
 | `KIMI_REGISTRY_API_KEY` | `provider add` / `catalog add` 的注册表 key | —（见 cli-reference） |
 | `KIMI_CODE_AGENT_SWARM_MAX_CONCURRENCY` | 限制 `/swarm` 初始加速阶段并发子 agent 数（防触发限流，v0.18） | 正整数 |
+| `KIMI_SUBAGENT_TIMEOUT_MS` | 单个 `Agent` / `AgentSwarm` 超时，覆盖 `[subagent] timeout_ms` | 正整数毫秒；默认 `7200000`（2h），print 模式未显式设置时默认 `0` |
 | `HTTP_PROXY`/`http_proxy` · `HTTPS_PROXY`/`https_proxy` | `http://` / `https://` 请求代理（v0.12 官方支持，大小写均认） | 代理 URL |
 | `ALL_PROXY`/`all_proxy` | 未设按 scheme 的代理时的回退；SOCKS 用 `socks5://`/`socks4://` 前缀 | 代理 URL |
 | `NO_PROXY`/`no_proxy` | 绕过代理的主机列表（逗号分隔） | 如 `localhost,127.0.0.1` |
@@ -65,7 +68,7 @@ kimi --yolo -p "批量重命名以下文件..."
 |---|---|
 | `KIMI_CODE_EXPERIMENTAL_FLAG` | 在当前进程启用**全部**已注册实验功能（`1/true/yes/on`） |
 
-> v0.12 起 Goal 模式 / 后台提问 / Sub-Skill 已正式发布，无需实验开关。v0.21 后 micro-compaction 已移除；旧的 `KIMI_CODE_EXPERIMENTAL_MICRO_COMPACTION` 不再是当前配置路径。v0.23 新增的 progressive tool disclosure 属实验能力，仍由内部实验 flag 控制，默认关闭。
+> v0.12 起 Goal 模式 / 后台提问 / Sub-Skill 已正式发布，无需实验开关。v0.21 后 micro-compaction 已移除；旧的 `KIMI_CODE_EXPERIMENTAL_MICRO_COMPACTION` 不再是当前配置路径。v0.23 新增的 progressive tool disclosure 属实验能力，仍由内部实验 flag 控制、默认关闭；当前能力名为 `dynamically_loaded_tools`（早期名 `select_tools`）。
 
 ### 临时模型（`KIMI_MODEL_*`，内存态、不落配置）
 
@@ -80,14 +83,14 @@ kimi --yolo -p "批量重命名以下文件..."
 | `KIMI_MODEL_MAX_CONTEXT_SIZE` | 最大上下文 token | `262144`（256K） |
 | `KIMI_MODEL_CAPABILITIES` | 能力标签（逗号分隔，与自动探测取并集） | `image_in,thinking` |
 | `KIMI_MODEL_DISPLAY_NAME` | `/model` 显示名 | 回退 `KIMI_MODEL_NAME` |
-| `KIMI_MODEL_MAX_OUTPUT_SIZE` | 单次输出上限（仅 Anthropic） | 模型默认 |
+| `KIMI_MODEL_MAX_OUTPUT_SIZE` | 单次输出上限（仅 Anthropic）；显式值覆盖内置 Claude 上限 | 模型默认 |
 | `KIMI_MODEL_REASONING_KEY` | 推理字段名覆盖（仅 OpenAI） | 自动探测 |
 | `KIMI_MODEL_THINKING_EFFORT` | thinking 强度 | `low`/`medium`/`high`/`xhigh`/`max` |
 | `KIMI_MODEL_ADAPTIVE_THINKING` | 强制自适应 thinking（Anthropic） | 模型推断 |
 | `KIMI_MODEL_MAX_COMPLETION_TOKENS` | 每请求 `max_completion_tokens` 硬上限（仅 kimi 供应商） | `0`/负数＝不钳制 |
 | `KIMI_MODEL_TEMPERATURE` | 采样温度（仅 kimi，全局生效） | 如 `0.3` |
 | `KIMI_MODEL_TOP_P` | top_p（仅 kimi，全局生效） | 如 `0.95` |
-| `KIMI_MODEL_THINKING_KEEP` | Moonshot thinking 透传；覆盖 `[thinking] keep`（默认 `"all"`），仅对 kimi 供应商且 Thinking 开启时注入；`off`/`none`/`false`/`0` 等关值可禁用 | 如 `all` 或 `off` |
+| `KIMI_MODEL_THINKING_KEEP` | 保留 thinking；Kimi 用 `thinking.keep`，Anthropic 用 `context_management.clear_thinking_20251015`；覆盖 `[thinking] keep`（默认 `"all"`），仅在 Thinking 开启时注入；`off`/`none`/`false`/`0` 等关值可禁用 | 如 `all` 或 `off` |
 
 ### 日志
 

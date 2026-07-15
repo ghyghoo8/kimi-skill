@@ -13,7 +13,7 @@
 | `Edit` | 审批 | 精确替换 `old_string`→`new_string`；默认唯一匹配，多处需 `replace_all:true`；两串不能相同 |
 | `Grep` | 自动 | ripgrep；`pattern`/`path`/`type`/`glob`/`output_mode`(`files_with_matches`默认/`content`/`count_matches`)；`content` 支持 `-A/-B/-C/-i/-n/multiline`；`offset`+`head_limit`(默认250,0=不限)；自动滤 `.env`/私钥，`include_ignored=true` 搜被忽略文件但仍滤敏感 |
 | `Glob` | 自动 | 按 glob `pattern` 在 `path`(默认 cwd) 匹配，按改时间倒序，≤100；默认尊重 `.gitignore`/`.ignore`/`.rgignore`，`include_ignored=true` 可纳入被忽略文件但仍滤敏感；支持 `*.{ts,tsx}` 花括号模式，宽泛通配可能在上限处截断 |
-| `ReadMediaFile` | 自动 | 图片/视频多模态发给模型；仅 `path`，≤100MB；依赖模型 `image_in`/`video_in` |
+| `ReadMediaFile` | 自动 | 图片/视频多模态发给模型；`path` + 可选图片 `region`/`full_resolution`，≤100MB；默认按 `[image]` 预算压缩，无法安全压缩时拒绝发送原图并提示先缩小；依赖模型 `image_in`/`video_in` |
 
 ## Shell
 
@@ -21,7 +21,7 @@
 |---|---|---|
 | `Bash` | 审批 | 执行 shell 命令 |
 
-`Bash` 参数：`command`(必填)、`cwd`、`timeout`(ms,前台默认 60s、最长 5min)、`run_in_background`(后台默认 10min 超时)、`description`(后台必填)、`disable_timeout`。前台阻塞并流式显示 stdout/stderr；后台立即返回任务 ID、结束自动通知。stdin 始终关闭（交互命令立即 EOF）。两阶段终止 SIGTERM→5s→SIGKILL。Windows 默认 Git Bash。
+`Bash` 参数：`command`(必填)、`cwd`、`timeout`(ms,前台默认 60s、最长 5min)、`run_in_background`(后台默认 10min 超时；`kimi -p` 默认无超时)、`description`(后台必填)、`disable_timeout`。v0.24 起前台命令触及超时后默认**转入后台继续运行**，完成时通知 Agent；设 `[background] bash_auto_background_on_timeout = false` 可恢复超时即终止。转后台后受 `bash_task_timeout_s` 约束（交互默认 600s，print 默认 0＝无超时）。stdin 始终关闭（交互命令立即 EOF）。停止或后台超时采用 SIGTERM→宽限期→SIGKILL。Windows 默认 Git Bash。
 
 ## 网络类
 
@@ -35,7 +35,7 @@
 | 工具 | 默认审批 | 说明 |
 |---|---|---|
 | `EnterPlanMode` | 自动 | 进入 Plan；无参 |
-| `ExitPlanMode` | 自动（计划需用户确认） | 读计划文件呈给用户审批后退出；可选 `options`(1–3 备选,每项 `label`≤80/`description`,`label` 不重复且不可用保留词 Approve/Reject/...) |
+| `ExitPlanMode` | 计划审批 | 读计划文件呈给用户审批后退出；YOLO 仍需确认，Auto 模式会自动批准并标记 `Auto-approved`；可选 `options`(1–3 备选,每项 `label`≤80/`description`,`label` 不重复且不可用保留词 Approve/Reject/...) |
 
 Plan 模式下 `Write`/`Edit` 只能写计划文件，`TaskStop` 被拦截，其余工具（含 `Bash`）按当前权限。
 
@@ -49,7 +49,7 @@ Plan 模式下 `Write`/`Edit` 只能写计划文件，`TaskStop` 被拦截，其
 
 | 工具 | 默认审批 | 说明 |
 |---|---|---|
-| `Agent` | 自动 | 派子 agent；`prompt`+`description`(3–5词)；可选 `subagent_type`(默认 `coder`)/`resume`(与 type 互斥)/`run_in_background`；固定 30min 超时 |
+| `Agent` | 自动 | 派子 agent；`prompt`+`description`(3–5词)；可选 `subagent_type`(默认 `coder`)/`resume`(与 type 互斥)/`run_in_background`；默认 2h，可用 `[subagent] timeout_ms` / `KIMI_SUBAGENT_TIMEOUT_MS` 配置，print 模式未显式设置时默认 0＝无超时 |
 | `AgentSwarm` | swarm 模式自动，否则审批 | 从 `prompt_template`(含 `{{item}}`)+`items` 批量启子 agent，或 `resume_agent_ids` 恢复；≤128 个；等全部完成返聚合报告；并发受 `KIMI_CODE_AGENT_SWARM_MAX_CONCURRENCY` 限（默认起 5、每 700ms +1、不设上限）；权限仅按工具名匹配（不支持 `AgentSwarm(swarm)`） |
 | `AskUserQuestion` | 自动 | 结构化提问；`questions`(1–4 题,每题 `question`+`options`(2–4)+可选 `header`≤12/`multi_select`)；自动加「其他」；`background`=true 起后台任务；宿主无交互能力则失败、改文本提问 |
 | `Skill` | 自动 | 调已注册 **inline** Skill；`skill`+可选 `args`；仅 `type=inline`、非 `disableModelInvocation`；嵌套≤3 层 |

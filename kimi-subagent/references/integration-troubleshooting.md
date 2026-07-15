@@ -197,7 +197,7 @@ for up, lo in (("HTTPS_PROXY", "https_proxy"), ("HTTP_PROXY", "http_proxy")):
 2. 若**非沙箱通、沙箱挂** → 是宿主执行环境的网络，不是 kimi。把 kimi 调用放到**非受限网络**里跑（如关闭该 agent 的网络沙箱、放宽容器出网）。
 3. 若**非沙箱也挂** → 才是服务端/网络真波动，重试或等恢复。
 
-**工程兜底**：无论哪种，宿主 `subprocess` 调 kimi 都应对 `connection_error`/超时/`exit=75`/网关 5xx **自动重试 + 指数退避**（骑过短抖动）；受限网络下重试帮助有限，根治要换执行环境。
+**工程兜底**：v0.24.2 起 Kimi 内部对每步瞬时 LLM 失败默认最多重试 10 次（`loop_control.max_retries_per_step`）；但这不覆盖进程启动、宿主网络或整体 `exit=75`。宿主 `subprocess` 仍应对 `connection_error`/超时/`exit=75`/网关 5xx 做外层**自动重试 + 指数退避**；受限网络下重试帮助有限，根治要换执行环境。
 
 > 一句话：`connection_error` 先怀疑**自己这侧的网络路径（沙箱/受限出网）**，再怀疑服务端——多数"间歇宕"是执行环境放大的假象。
 

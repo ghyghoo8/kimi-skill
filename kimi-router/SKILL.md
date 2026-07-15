@@ -2,11 +2,11 @@
 name: kimi
 description: |
   Kimi (Moonshot AI) 总入口路由 Skill。当需要把任务委派给 Kimi Code CLI 当子 agent 跑、
-  使用 kimi 命令行（交互/会话/斜杠命令/插件/MCP/安装升级）、调用 Kimi 开放平台 API
+  使用 kimi 命令行（交互/会话/斜杠命令/官方文档问答/插件/MCP/安装升级）、调用 Kimi 开放平台 API
   (kimi-k2.6 / kimi-latest) 与工具调用、或用 kimi-datasource 查金融/宏观/企业/学术数据时，先进此 Skill 做分发。
 whenToUse: |
   用户提到 kimi / Kimi CLI / kimi-code / 月之暗面 / Moonshot；想让 kimi 跑一段活、并行委派、
-  headless 调用 kimi；问 kimi 命令行参数、会话、斜杠命令、装插件/MCP；接入 Kimi API 或 tool calls；
+  headless 调用 kimi；问 kimi 命令行参数、会话、斜杠命令、官方文档、装插件/MCP；接入 Kimi API 或 tool calls；
   用 kimi-datasource 查股票行情/宏观经济/企业工商/学术文献等数据。
 ---
 
@@ -22,7 +22,7 @@ whenToUse: |
 | 用户意图（命中任一即路由） | 子 Skill |
 |---|---|
 | 把子任务**委派**给 kimi 跑、**并行**派活、**headless/`-p` 调用** kimi、让 kimi 在隔离上下文里独立完成一段工作、解析 kimi 输出 | **`kimi-subagent`** ★ |
-| **交互式**使用 kimi、命令行**参数/flag**、**会话**管理、**斜杠命令**、装**插件/MCP**、Plan/YOLO/Auto 模式、**安装/升级/登录**、`kimi doctor` | **`kimi-cli`** |
+| **交互式**使用 kimi、命令行**参数/flag**、**会话**管理、**斜杠命令**、内置**官方文档问答**、装**插件/MCP**、Plan/YOLO/Auto 模式、**安装/升级/登录**、`kimi doctor` | **`kimi-cli`** |
 | 接入 **Kimi 开放平台 API**（`kimi-k2.6` / `kimi-latest`）、**工具调用（Tool Calls）**、流式响应、用代码调 Kimi | **`kimi-api`** |
 | 用 **kimi-datasource** 查数据：**金融**（股票行情/技术指标/财报/选股、宏观经济）、**企业工商**、**学术文献**；装/用该插件 | **`kimi-datasource`** |
 

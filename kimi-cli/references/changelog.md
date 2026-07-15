@@ -2,7 +2,7 @@
 
 官方更新日志：https://www.kimi.com/code/docs/kimi-code/whats-new.html
 
-**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.23.0（tag 2026-07-06，核对 2026-07-07）。**
+**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.24.2（tag 2026-07-15，核对 2026-07-15）。**
 更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `AGENTS.md` / `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
 
 > ⚠️ 官方 what's-new 只列 minor 版本、且会滞后。**patch 版本与权威细节看源码仓库** `apps/kimi-code/CHANGELOG.md`（`MoonshotAI/kimi-code`）。源码核对（2026-06-17）发现站点漏掉的：
@@ -12,6 +12,51 @@
 > - datasource 插件 **v3.2.0**，装后不自动更新、需重装升级（#646）。
 
 ## 各版本要点（新→旧）
+
+### v0.24.2 — 2026-07-15
+- **print 生命周期默认改为 steer**（#1704）：`kimi -p` 只要还有后台任务就保持运行，把每个完成结果以合成 user 消息回灌主 Agent 并触发新 turn；`print_background_mode` 支持 `exit` / `drain` / `steer`，默认 `steer`。`print_wait_ceiling_s=315360000`、`print_max_turns=100000`，近似不设限。
+- **print 后台工作默认不超时**：后台 Bash 的 `bash_task_timeout_s` 与子 Agent 的 `[subagent] timeout_ms` 在 print 模式未显式设置时均为 `0`；交互模式子 Agent 统一默认 2 小时，可用 `KIMI_SUBAGENT_TIMEOUT_MS` 覆盖。
+- **Goal headless 运行到终态**：`kimi -p "/goal ..."` 不再首个 turn 后退出，而是保持运行到完成 / 受阻 / 暂停，再返回 `0` / `3` / `6`。
+- **LLM 单步重试默认 3→10**（#1740）：429 / 过载等瞬时故障会指数退避数分钟后才让 turn 失败；用 `loop_control.max_retries_per_step` 调整。
+- **内置官方文档问答**（#1727）：新增 `/check-kimi-code-docs`，回答 CLI、配置、会员、错误码并附来源链接，也会被产品问题自动触发。
+- 实验性动态工具加载能力的当前名称为 `dynamically_loaded_tools`（早期名 `select_tools`）；修复两套 Agent 引擎之间的 print 配置、Goal 与超时语义不一致。
+- ⚠️ 超出范围：Web 工作区同步、诊断日志、AgentSwarm 卡片与移动端 UI 修复，仅标记不展开。
+
+### v0.24.1 — 2026-07-14
+- 修复 preserved-thinking 历史含空推理步骤时会话卡住；修复供应商延迟就绪导致内置工具不可用。
+- Thinking effort 路由更严格：非 Kimi provider 保留配置值；Kimi 运行时校验 `support_efforts`，模型切换时安全回落到 `default_effort`。
+- 修复 Goal 完成摘要丢失；⚠️ Web thinking 标签与选择器显示优化超出范围。
+
+### v0.24.0 — 2026-07-14
+- **前台 Bash 超时转后台**：默认不再杀掉命令，而是继续运行并在完成后回报；设 `[background] bash_auto_background_on_timeout = false` 恢复旧行为。停止流程新增正常退出宽限期后再强杀。
+- **会话 fork 完整性**：保留媒体附件、plan、后台任务输出与 cron，失败不再留下残缺副本；活跃/排队 Goal 仍不带入。
+- 图片请求过大可恢复；Skill 解析失败会告警；修复首 turn MCP 工具不可用、OAuth 拒绝原因被误报为需重新登录、恢复会话后台任务丢失等影响委派可靠性的问题。
+- ⚠️ 超出范围：Web `/export` 下载诊断 ZIP（≤64 MiB）且与 TUI `/export` 的 Markdown 行为不同；`kimi web` 默认 Agent 引擎与 Web UI 修复不展开。
+
+### v0.23.6 — 2026-07-12
+- 新增 `[subagent] timeout_ms` / `KIMI_SUBAGENT_TIMEOUT_MS`，交互默认由 30 分钟提高到 2 小时；新增 `print_background_mode = "steer"`，让后台任务完成后可继续引导主 Agent。
+- 修复 `kimi -p` 在活跃 Goal 或待触发 cron 尚未结束时提前退出；动态工具加载能力从 `select_tools` 改名为 `dynamically_loaded_tools`。
+
+### v0.23.5 — 2026-07-10
+- 供应商 429 / 过载等瞬时错误遵循 `Retry-After`，重试事件会写入 `-p --output-format stream-json`。
+- 不支持图片格式不再卡死后续请求，会话可自动丢弃问题图片并恢复。
+
+### v0.23.4 — 2026-07-10
+- 新增 `[image] max_edge_px` / `read_byte_budget` 与 `KIMI_IMAGE_*` 覆盖，控制所有图片入口的压缩；HTTP 413 后会用文本标记替换旧媒体并重试。
+- 修复无效工作目录会话无法恢复；修复 prompt 模式 Goal 未运行到完成。
+
+### v0.23.3 — 2026-07-08
+- 修复当前账号无权使用模型时误报 OAuth 登录过期。
+
+### v0.23.2 — 2026-07-08
+- 修复 `kimi -p` 在 turn 失败时仍返回退出码 0；修复 Goal 预算、状态更新与启动轮次计数。
+- 实验性动态工具加载在 compaction 后丢弃已加载 schema，并要求模型重新选择需要的工具。
+- ⚠️ 超出范围：Web 定时提醒、模型选择器与 UI 优化仅标记不展开。
+
+### v0.23.1 — 2026-07-07
+- 修复 `kimi -p` 丢弃启动较晚或长时间运行的后台子 Agent；修复交互模式 `--skills-dir` 不生效。
+- Anthropic provider 默认也保留历史 thinking，可用 `[thinking] keep = "off"` / `KIMI_MODEL_THINKING_KEEP=off` 关闭。
+- 修复 Goal 完成/受阻摘要、预算与权限恢复等问题；修复第三方模型显式 `max_output_size` 被内置上限裁剪。
 
 ### v0.23.0 — 2026-07-06
 - **Preserved Thinking 默认开启**（#1417）：Kimi 模型在 Thinking 开启时默认保留历史 `reasoning_content`，跨轮推理更连续但会增加输入 token。用 `[thinking] keep = "off"` 或 `KIMI_MODEL_THINKING_KEEP=off` 禁用。
@@ -183,4 +228,7 @@
 | 插件斜杠命令、双击 `Esc` 撤销选择器、Thinking 配置改为 `[thinking].enabled`、`default_thinking`/`thinking.mode` 废弃 | v0.21.0 |
 | 模型覆盖 `[models."<alias>".overrides]`、超大图片压缩、移除 micro-compaction、Shell 命令历史召回、`background.print_wait_ceiling_s`、`tui.disable_paste_burst` | v0.22.0–v0.22.2 |
 | `kimi -p` 等后台子 agent 结果后再退出、`kimi server run --keep-alive`/`--dangerous-bypass-auth` | v0.22.3 |
-| Preserved Thinking 默认开启（`[thinking] keep = "off"` 可关）、实验性 progressive tool disclosure (`select_tools`) | v0.23.0 |
+| Preserved Thinking 默认开启（`[thinking] keep = "off"` 可关）、实验性 progressive tool disclosure（早期名 `select_tools`） | v0.23.0 |
+| `kimi -p` turn 失败返回非 0、`[image]` 图片压缩、stream-json 重试事件、`[subagent] timeout_ms`、`print_background_mode`、动态工具能力改名为 `dynamically_loaded_tools` | v0.23.2–v0.23.6 |
+| Bash 超时转后台（`bash_auto_background_on_timeout`）、fork 保留媒体/plan/后台输出/cron、Web `/export` 诊断 ZIP（超出范围） | v0.24.0 |
+| `kimi -p` 默认 steer 后台结果、print 后台/子 Agent 默认无超时、Goal 跑到终态、LLM 重试默认 10 次、`/check-kimi-code-docs` | v0.24.2 |

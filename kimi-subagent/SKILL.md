@@ -3,10 +3,11 @@ name: kimi-subagent
 description: |
   指引宿主 agent（如 Claude Code / Kimi 主 agent）把 Kimi Code CLI 当作可委派的子 agent：
   通过 headless（`kimi -p`）外壳调用 kimi 在隔离上下文中独立完成一段任务，把全部上下文写进
-  prompt，用 `--output-format stream-json` 解析输出，并发派活、多轮续接、按退出码判断成败。
+  prompt，用 `--output-format stream-json` 解析输出，并发派活、多轮续接、控制后台任务生命周期并按退出码判断成败。
 whenToUse: |
   想把一个子任务交给 kimi 独立去跑；需要并行委派多个 kimi 实例；以非交互/脚本方式调用 kimi；
-  让 kimi 在某个目录里探索/改代码/写测试并把结果回传；解析 kimi 的 headless 输出或退出码。
+  让 kimi 在某个目录里探索/改代码/写测试并把结果回传；解析 kimi 的 headless 输出或退出码；
+  配置 print_background_mode、后台 Bash 或子 Agent 超时。
 ---
 
 # 把 Kimi CLI 当子 Agent（headless 委派）
@@ -21,11 +22,10 @@ whenToUse: |
 kimi -p "<完整、自包含的任务描述>" \
   --output-format stream-json \   # 逐行 JSON，便于程序解析；text 是 transcript 样式（非纯文本）
   -m kimi-k2.6 \                  # 可选：指定模型
-  --auto \                        # 自动权限：常规工具免确认（headless 默认即 auto 策略）
   -w /path/to/project             # 可选：工作目录
 ```
 
-- `-p/--prompt`：非交互执行单条指令，**不开 TUI**，执行完即退出。
+- `-p/--prompt`：非交互执行指令，**不开 TUI**。无未决后台任务时在主 turn 后退出；v0.24.2 起有后台任务时默认继续等待并把完成结果回灌给主 Agent，Goal 则运行到终态。
 - `--output-format <text|stream-json>`：**仅在 `-p` 下有效**。`text`（默认）transcript 样式（`•` 前缀，非干净纯文本）；`stream-json` 逐行 JSON（thinking 不入 JSONL）。
 - headless 模式采用 **`auto` 权限策略**：常规工具按 auto 规则自动放行，但**静态 deny 策略仍然生效**。
 - 流向：Assistant 正文 → stdout；thinking / 工具进度 / 恢复提示 → stderr。
@@ -57,7 +57,7 @@ kimi -p "<完整、自包含的任务描述>" \
 
 把彼此独立的子任务拆给多个 kimi 实例并行跑，全部完成后由宿主汇总。任务拆分、并发上限、汇总、失败重试、「何时该委派 vs 自己做」 → `references/patterns.md`。
 
-> v0.22.3 起，`kimi -p` 会等待后台子 agent 完成并消费其结果后再退出。若你在被派 kimi 内部显式启动后台任务并希望 print 模式退出前继续等待，可配 `[background] keep_alive_on_exit = true` 与 `print_wait_ceiling_s`；详见 `kimi-cli/references/config-files.md`。
+> **v0.24.2 当前语义**：`kimi -p` 默认 `print_background_mode = "steer"`。只要还有未决后台任务，进程就保持运行；每次完成结果以合成 user 消息回灌给主 Agent，触发后续 turn，直到没有未决任务。print 模式下后台 Bash 与子 Agent 默认也不设超时。需要旧的一轮后退出可设 `[background] print_background_mode = "exit"`；只等待但不回灌结果用 `"drain"`。完整字段与版本门控见 `kimi-cli/references/config-files.md`。
 
 ## 6. 成败判断
 
@@ -79,7 +79,7 @@ kimi -p "<完整、自包含的任务描述>" \
 # 委派 kimi 在某仓库里定位并修复一个 bug，结构化回传
 kimi -p '在 /repo 下：用户反馈登录后 500。请定位根因并修复，最后只输出一段 JSON：
 {"root_cause": "...", "files_changed": ["..."], "summary": "..."}' \
-  --output-format stream-json --auto -w /repo
+  --output-format stream-json -w /repo
 echo "exit=$?"
 ```
 

@@ -71,9 +71,9 @@ KIMI_BASE_URL = "https://api.moonshot.ai/v1"
 | `provider` | string | ✅ | `[providers]` 中的供应商名 |
 | `model` | string | ✅ | 实际发给 API 的 model ID |
 | `max_context_size` | int | ✅ | 最大上下文 token（≥1） |
-| `max_output_size` | int | | 输出 token 上限（Anthropic 专用） |
-| `capabilities` | array<string> | | 能力标签：`thinking` / `image_in` / `video_in` / `audio_in` / `tool_use` |
-| `support_efforts` | array<string> | | 模型目录声明的 Thinking 档位；刷新可能改写，手动固定请放到 `overrides` |
+| `max_output_size` | int | | 输出 token 上限（Anthropic 专用）；显式值覆盖内置 Claude 上限 |
+| `capabilities` | array<string> | | 能力标签：`thinking` / `always_thinking` / `image_in` / `video_in` / `audio_in` / `tool_use` |
+| `support_efforts` | array<string> | | 模型接受的 Thinking 档位；Kimi 运行时会校验，不支持的配置值回落到 `default_effort`；刷新可能改写，手动固定请放到 `overrides` |
 | `default_effort` | string | | 模型默认 Thinking 档位；刷新可能改写，手动固定请放到 `overrides` |
 | `display_name` | string | | UI 显示名（缺省取 `model`） |
 | `reasoning_key` | string | | 仅 OpenAI；非标准推理字段名 |
@@ -108,8 +108,8 @@ display_name = "Kimi for Coding (custom)"
 | 字段 | 类型 | 默认 | 取值 |
 |---|---|---|---|
 | `enabled` | bool | `true` | 新会话是否默认开启 Thinking；`false` 强制关闭 |
-| `effort` | string | — | `low` / `medium` / `high` / `xhigh` / `max` 等，实际取决于模型 `support_efforts` |
-| `keep` | string | `"all"` | Kimi 模型保留历史 `reasoning_content` 的透传设置；`off`/`none`/`false`/`0` 等关值可禁用 |
+| `effort` | string | — | `low` / `medium` / `high` / `xhigh` / `max` 等；Kimi 按 `support_efforts` 校验并回落，其他 provider 在协议支持时原样传递 |
+| `keep` | string | `"all"` | 保留历史 thinking；Kimi 用 `thinking.keep`，Anthropic 用 `context_management.clear_thinking_20251015`（开启时走 beta Messages API）；`off`/`none`/`false`/`0` 等关值可禁用 |
 
 已废弃字段：v0.21 起 `default_thinking` 改为 `[thinking].enabled`；`thinking.mode = "off"` 改为 `enabled = false`，`mode = "on"` / `"auto"` 等价于默认开启。
 
@@ -118,20 +118,44 @@ display_name = "Kimi for Coding (custom)"
 | 字段 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `max_steps_per_turn` | int | — | 每轮最大步数（0 或不设＝无限） |
-| `max_retries_per_step` | int | `3` | 单步失败重试次数 |
+| `max_retries_per_step` | int | `10` | 单步失败重试次数；v0.24.2 起默认从 3 提高到 10，429 / 过载等瞬时错误会指数退避数分钟后才让 turn 失败 |
 | `reserved_context_size` | int | — | 为输出预留的 token；触发自动压缩 |
 
-### `[background]` — 后台任务并发
+### `[background]` — 后台任务与 print 生命周期
 
 | 字段 | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `max_running_tasks` | int | — | 最大并发后台任务数 |
-| `keep_alive_on_exit` | bool | `false` | 退出会话时保留运行中任务；print 模式下为 `true` 时会在退出前等待后台任务跑完 |
-| `print_wait_ceiling_s` | int | `3600` | `kimi -p` 且 `keep_alive_on_exit = true` 时，主 turn 结束后等待后台任务的最长秒数 |
+| `keep_alive_on_exit` | bool | `false` | 退出会话时保留运行中任务；print 模式仅作兼容回退，`true` 等价于未显式设置 `print_background_mode` 时的 `"drain"` |
+| `kill_grace_period_ms` | int | `5000` | 停止或超时后先请求正常退出，超过该毫秒数再强制终止 |
+| `bash_auto_background_on_timeout` | bool | `true` | 前台 Bash 命令超时时转后台继续运行；`false` 恢复超时即终止 |
+| `bash_task_timeout_s` | int | `600` | 后台 Bash 默认超时；`0`＝无超时；`kimi -p` 未显式配置时默认 `0` |
+| `print_background_mode` | `"exit" \| "drain" \| "steer"` | `"steer"` | `kimi -p` 主 turn 结束后的策略：立即退出 / 等待但不回灌 / 等待并以完成结果 steer 主 Agent 进入新 turn |
+| `print_wait_ceiling_s` | int | `315360000` | `drain` / `steer` 的墙钟上限；默认 10 年，近似不设限 |
+| `print_max_turns` | int | `100000` | `steer` 由后台完成触发的新 turn 上限；默认近似不设限 |
 
-`keep_alive_on_exit` 可被环境变量 `KIMI_CODE_BACKGROUND_KEEP_ALIVE_ON_EXIT` 覆盖（env 优先）。
+`keep_alive_on_exit` 可被环境变量 `KIMI_CODE_BACKGROUND_KEEP_ALIVE_ON_EXIT` 覆盖（env 优先），但当前 print 模式优先使用显式的 `print_background_mode`。
 
-v0.22.2 起：在 print 模式（`kimi -p "<prompt>"`）中，如果被派 kimi 内部启动了后台任务（如后台子 agent）并希望它们完成，设置 `keep_alive_on_exit = true`。否则主 turn 结束时后台任务会随进程清理。v0.22.3 起普通 `kimi -p` 会等待后台子 agent 完成并响应其结果后再退出，避免提前结束本轮。
+**v0.24.2 当前默认**：`kimi -p` 只要还有未决后台任务就不退出；每个完成结果以合成 user 消息回灌给主 Agent，继续执行新 turn，直到某个 turn 结束时无未决任务。print 模式下后台 Bash 和子 Agent 未显式配置时均不设超时。需要 v0.23 及更早的一轮后退出语义时，设置 `print_background_mode = "exit"`；只等任务跑完但不让结果进入主 Agent 时用 `"drain"`。
+
+### `[subagent]` — 子 Agent 超时
+
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `timeout_ms` | int | `7200000`（2h） | 单个 `Agent` / `AgentSwarm` 的 per-task 超时；`0`＝无超时；前后台均生效，`kimi -p` 未显式配置时默认 `0`；超过 `2147483647` 会钳到约 24.8 天 |
+
+环境变量 `KIMI_SUBAGENT_TIMEOUT_MS` 的优先级高于配置文件。
+
+### `[image]` — 图片压缩
+
+适用于粘贴图片、`ReadMediaFile` 和 MCP 工具图片结果等所有入口。
+
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `max_edge_px` | int | `2000` | 图片最长边上限；超出时等比缩小 |
+| `read_byte_budget` | int | `262144`（256KB） | `ReadMediaFile` 默认读图的单图字节预算；`region` / `full_resolution` 回读不受此预算限制 |
+
+可分别用 `KIMI_IMAGE_MAX_EDGE_PX`、`KIMI_IMAGE_READ_BYTE_BUDGET` 覆盖。
 
 ### `[experimental]` — 实验特性开关
 
@@ -150,7 +174,7 @@ v0.22.2 起：在 print 模式（`kimi -p "<prompt>"`）中，如果被派 kimi 
 
 ```toml
 [services.moonshot_search]
-base_url = "https://api.moonshot.cn/v1/search"
+base_url = "https://api.kimi.com/coding/v1/search"
 api_key = "sk-xxx"
 ```
 

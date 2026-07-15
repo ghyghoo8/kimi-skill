@@ -38,7 +38,7 @@ Use progressive disclosure: quick-reference belongs in each `SKILL.md`; exhausti
 
 ## Current Kimi Facts
 
-Content is last verified against `@moonshot-ai/kimi-code` v0.23.0, tag date 2026-07-06, checked on 2026-07-07.
+Content is last verified against `@moonshot-ai/kimi-code` v0.24.2, tag date 2026-07-15, checked on 2026-07-15.
 
 Current baseline:
 - CLI package: Node.js `@moonshot-ai/kimi-code`, Node >= 22.19.0.
@@ -49,7 +49,9 @@ Current baseline:
 - v0.20.0 added shell mode, Write auto-creating missing parent directories, `/reload` refreshing plugin Skills, and third-party plugin install confirmation.
 - v0.21.0 added plugin-declared slash commands, double-`Esc` undo picker, and the thinking-effort refactor; `default_thinking` and `thinking.mode` are deprecated in favor of `[thinking].enabled`.
 - v0.22.0 added `[models."<alias>".overrides]`; v0.22.2 added `background.print_wait_ceiling_s` and `tui.disable_paste_burst`; v0.22.3 fixed `kimi -p` to wait for background subagents before exit.
-- v0.23.0 enables preserved thinking by default for Kimi models when Thinking is on; disable with `[thinking] keep = "off"` or `KIMI_MODEL_THINKING_KEEP=off`. It also adds experimental progressive tool disclosure (`select_tools`), which remains off by default.
+- v0.23.0 enables preserved thinking by default for Kimi models when Thinking is on; disable with `[thinking] keep = "off"` or `KIMI_MODEL_THINKING_KEEP=off`. It also introduced experimental progressive tool disclosure under the early capability name `select_tools`; it remains off by default.
+- v0.23.4 added configurable image compression; v0.23.6 added `print_background_mode`, configurable sub-agent timeouts, and renamed the experimental dynamic-tool capability to `dynamically_loaded_tools`.
+- v0.24.0 moves timed-out foreground Bash commands into the background by default. v0.24.2 makes `kimi -p` use `print_background_mode = "steer"` by default with effectively unbounded print-mode background/sub-agent waits, raises per-step LLM retries from 3 to 10, and adds `/check-kimi-code-docs`.
 
 Avoid stale Python-era facts unless explicitly documenting migration:
 - `uv ` installation flows for the old CLI.

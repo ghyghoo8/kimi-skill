@@ -2,12 +2,12 @@
 name: kimi-cli
 description: |
   Node.js 版 Kimi Code CLI（@moonshot-ai/kimi-code）交互式用法：安装/升级/登录、启动与命令行
-  参数、会话管理、Plan/YOLO/Auto 模式、斜杠命令、插件与 MCP、配置文件与 kimi doctor。
+  参数、会话管理、Plan/YOLO/Auto 模式、斜杠命令、内置官方文档问答、插件与 MCP、配置文件与 kimi doctor。
   用户问 kimi 命令怎么用、某个 flag/斜杠命令、装插件或 MCP、配置 kimi 时进此 Skill。
 whenToUse: |
   交互式使用 kimi；询问 kimi 启动参数 / flag / 子命令；会话续接/分叉/导出；Plan/YOLO/Auto/Goal 模式切换；
   输入与快捷键、@ 引文件 / 贴图 / 外部编辑器；定时任务提醒（cron）；
-  斜杠命令含义；安装/升级/登录 kimi；装插件或配置 MCP；添加/管理模型供应商（kimi provider）；
+  斜杠命令含义；用内置 check-kimi-code-docs 查 CLI/配置/会员/错误码；安装/升级/登录 kimi；装插件或配置 MCP；添加/管理模型供应商（kimi provider）；
   config.toml / tui.toml 配置项、环境变量（KIMI_* / 临时模型）、数据目录与覆盖优先级、kimi doctor 排错。
 ---
 
@@ -31,7 +31,7 @@ kimi upgrade        # 升级到最新（kimi update 是别名）
 kimi migrate        # 迁移旧版 kimi-cli 数据
 ```
 
-> 校准锚点 **v0.23.0（tag 2026-07-06，核对 2026-07-07）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
+> 校准锚点 **v0.24.2（tag 2026-07-15，核对 2026-07-15）**；各版本特性与「功能首次出现版本」→ `references/changelog.md`。
 
 - 首次使用：进入后 `/login` 配置凭证（OAuth 设备码或 API key）。也可 `kimi login` 非交互登录。
 - Windows 需 Git for Windows；Git Bash 非默认路径时设 `KIMI_SHELL_PATH`。
@@ -61,21 +61,21 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 
 - **Plan 模式**：`Shift-Tab` 切换，或 `--plan` 启动 / `/plan`；`/plan clear` 清计划。先只读探索再行动。
 - **YOLO 模式**：`/yolo` 或 `-y`，跳过工具审批（仅 Plan 退出例外，谨慎）。
-- **Auto 模式**：`/auto` 或 `--auto`，工具自动放行但**禁止 agent 提问**，适合无人值守。
-- **Goal 模式**：v0.12 起正式发布（≤v0.11 需 `KIMI_CODE_EXPERIMENTAL_GOAL_COMMAND=1`）。`/goal <目标>` 跨多轮朝终态推进，`/goal next` 排队、`/goal pause|resume|cancel|replace`。`-p` 下仅创建目标，退出码 `0/3/6` → `references/interaction.md`。
+- **Auto 模式**：`/auto` 或 `--auto`，工具自动放行、Plan 退出自动批准并标记 `Auto-approved`，但**禁止 agent 提问**，适合无人值守。
+- **Goal 模式**：v0.12 起正式发布（≤v0.11 需 `KIMI_CODE_EXPERIMENTAL_GOAL_COMMAND=1`）。`/goal <目标>` 跨多轮朝终态推进，`/goal next` 排队、`/goal pause|resume|cancel|replace`。v0.24.2 起 `kimi -p "/goal ..."` 会保持运行直到目标进入终态，退出码 `0/3/6` → `references/interaction.md`。
 - **`/swarm`（v0.12）**：多 agent 并行执行任务、实时进度。`/swarm on|off` 只开关、`/swarm <任务>` 开后直接派活。
 
 ## 4. 会话管理
 
-- `/new`（`/clear`）开新会话；`/sessions`（`/resume`）浏览切换；`/fork` 分叉（两份独立，**已存目标不带入**）；`/title`(`/rename`) 改/看标题。
+- `/new`（`/clear`）开新会话；`/sessions`（`/resume`）浏览切换；`/fork` 分叉（两份独立，v0.24 起保留媒体、plan、后台输出与 cron，**活跃/排队目标仍不带入**）；`/title`(`/rename`) 改/看标题。
 - `/compact [指令]` 压缩上下文省 token；按工作目录分组存储，**勿手改 `sessions/`**。
-- 导出：`/export-md [path]`（`/export`）导 Markdown；`kimi export [id]` 打包 ZIP；`/export-debug-zip` 调试包。
+- 导出：TUI 的 `/export-md [path]`（`/export`）导 Markdown；`kimi export [id]` 打包 ZIP；`/export-debug-zip` 调试包。⚠️ v0.24 Web UI 的 `/export` 改为下载诊断 ZIP（≤64 MiB），与 TUI 同名命令不同，属 Web 范围。
 - `/btw [问题]` 在分叉子 agent 里开侧聊不打断主线。
 - 会话存储结构、多轮 headless 续接（`-c`/`-S`）、`--add-dir`、Goal 的 `-p` 退出码 → `references/interaction.md`（已聚焦 subagent；纯交互 TUI 用法仅标记）。
 
 ## 5. 斜杠命令
 
-常用：`/help` `/model` `/status` `/usage` `/mcp` `/plugins` `/init`（生成 AGENTS.md）`/tasks` `/undo`（撤销最近提示词）`/permission` `/settings`(`/config`)。完整清单与别名 → `references/slash-commands.md`。
+常用：`/help` `/model` `/status` `/usage` `/mcp` `/plugins` `/init`（生成 AGENTS.md）`/tasks` `/undo`（撤销最近提示词）`/permission` `/settings`(`/config`)。v0.24.2 新增内置 `/check-kimi-code-docs`，基于官方文档回答 CLI、配置、会员和错误码并附来源链接。完整清单与别名 → `references/slash-commands.md`。
 
 ## 6. 插件与 MCP
 
@@ -93,7 +93,7 @@ kimi -p "..."              # 非交互单条执行（headless）→ 详见 kimi-
 - 数据目录 `~/.kimi-code/`（可用 `KIMI_CODE_HOME` 覆盖）；配置 `config.toml` + `tui.toml`。
 - `kimi doctor [config|tui] [path]` 校验配置。
 - 模型供应商：`kimi provider add/remove/list`、`kimi provider catalog list/add`（从 models.dev 目录导入，如 `anthropic`/`openai`）→ 详见 `references/cli-reference.md`。
-- **配置项全表**（`[providers]` / `[models]` / `[models."<alias>".overrides]` / `[thinking]` / `[loop_control]` / `[background]` / `[services]` / `[[permission.rules]]` / `[[hooks]]`、tui.toml）→ `references/config-files.md`。
+- **配置项全表**（`[providers]` / `[models]` / `[models."<alias>".overrides]` / `[thinking]` / `[loop_control]` / `[background]` / `[subagent]` / `[image]` / `[services]` / `[[permission.rules]]` / `[[hooks]]`、tui.toml）→ `references/config-files.md`。
 - **覆盖优先级、环境变量全表、数据目录结构** → `references/env-and-data.md`。要点：命令行（仅本次）＞ 用户 `config.toml`；普通参数不从 shell env 取回退；凭证只从 `config.toml` 读；`config.toml` 仍用户级一份，但 **v0.19 起有项目级 `.kimi-code/local.toml`**（`/add-dir` 写入）；完全隔离用 `KIMI_CODE_HOME`；临时模型走 `KIMI_MODEL_*`。
 - Skills 发现目录、`extra_skill_dirs`、`--skills-dir` 等细节 → `references/skills.md`。
 - **报错速查**（401 鉴权 / 429 限流配额 / 400 请求格式 / 404 模型端点 / 500 服务端 / 工具错误）→ `references/error-reference.md`。
