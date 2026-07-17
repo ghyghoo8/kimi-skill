@@ -3,10 +3,12 @@ name: kimi-subagent
 description: |
   指引宿主 agent（如 Claude Code / Kimi 主 agent）把 Kimi Code CLI 当作可委派的子 agent：
   通过 headless（`kimi -p`）外壳调用 kimi 在隔离上下文中独立完成一段任务，把全部上下文写进
-  prompt，用 `--output-format stream-json` 解析输出，并发派活、多轮续接、控制后台任务生命周期并按退出码判断成败。
+  prompt，用 `--output-format stream-json` 解析输出，并发派活、多轮续接、控制后台任务生命周期，
+  利用内置 coder 的后台任务、Plan、Skill 与嵌套 Agent 能力，并按退出码判断成败。
 whenToUse: |
   想把一个子任务交给 kimi 独立去跑；需要并行委派多个 kimi 实例；以非交互/脚本方式调用 kimi；
   让 kimi 在某个目录里探索/改代码/写测试并把结果回传；解析 kimi 的 headless 输出或退出码；
+  让内置 coder 继续拆分任务、后台执行、进入 Plan、调用 Skill 或嵌套 Agent；
   配置 print_background_mode、后台 Bash 或子 Agent 超时。
 ---
 
@@ -57,7 +59,9 @@ kimi -p "<完整、自包含的任务描述>" \
 
 把彼此独立的子任务拆给多个 kimi 实例并行跑，全部完成后由宿主汇总。任务拆分、并发上限、汇总、失败重试、「何时该委派 vs 自己做」 → `references/patterns.md`。
 
-> **v0.24.2 当前语义**：`kimi -p` 默认 `print_background_mode = "steer"`。只要还有未决后台任务，进程就保持运行；每次完成结果以合成 user 消息回灌给主 Agent，触发后续 turn，直到没有未决任务。print 模式下后台 Bash 与子 Agent 默认也不设超时。需要旧的一轮后退出可设 `[background] print_background_mode = "exit"`；只等待但不回灌结果用 `"drain"`。完整字段与版本门控见 `kimi-cli/references/config-files.md`。
+> **v0.26.0 起的内部递归委派**：外层 `kimi -p` 里的内置 `coder` 子 Agent 已能运行后台 Shell、维护待办、进入 Plan、调用 Skills，并继续派发自己的嵌套 Agent；它会等自己的后台任务全部落定后才向上层报告完成。这是 **Kimi 进程内部**的拆分能力，与宿主并行启动多个 `kimi -p` 是不同层次；详细边界见 `references/patterns.md`。
+
+> **v0.24.2 起的当前 print 语义**：`kimi -p` 默认 `print_background_mode = "steer"`。只要还有未决后台任务，进程就保持运行；每次完成结果以合成 user 消息回灌给主 Agent，触发后续 turn，直到没有未决任务。print 模式下后台 Bash 与子 Agent 默认也不设超时。需要旧的一轮后退出可设 `[background] print_background_mode = "exit"`；只等待但不回灌结果用 `"drain"`。完整字段与版本门控见 `kimi-cli/references/config-files.md`。
 
 ## 6. 成败判断
 

@@ -2,7 +2,7 @@
 
 官方更新日志：https://www.kimi.com/code/docs/kimi-code/whats-new.html
 
-**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.24.2（tag 2026-07-15，核对 2026-07-15）。**
+**本仓库校准锚点：`@moonshot-ai/kimi-code` v0.26.0（tag 2026-07-16，核对 2026-07-17）。**
 更新前先 `kimi --version` / `npm view @moonshot-ai/kimi-code version`，与下表对照判断漂移；有差异则按 `AGENTS.md` / `CLAUDE.md`「Version drift」复核相关页面并 bump 锚点。
 
 > ⚠️ 官方 what's-new 只列 minor 版本、且会滞后。**patch 版本与权威细节看源码仓库** `apps/kimi-code/CHANGELOG.md`（`MoonshotAI/kimi-code`）。源码核对（2026-06-17）发现站点漏掉的：
@@ -12,6 +12,17 @@
 > - datasource 插件 **v3.2.0**，装后不自动更新、需重装升级（#646）。
 
 ## 各版本要点（新→旧）
+
+### v0.26.0 — 2026-07-16
+- **`coder` 子 Agent 能力对齐主 Agent**（#1776）：经 `Agent` 工具启动的默认 `coder` 可在后台执行 Shell、维护待办列表、进入 Plan、调用 Agent Skills，并继续派发自己的嵌套 Agent。它结束 turn 时若仍有后台任务，会等这些任务全部落定后才向主 Agent 报告完成。
+- **Thinking / effort 路由纠正**（#1765 / #1774）：Kimi provider 经 Anthropic 协议接入时不再错误展示推断出的 effort 选项，选项只来自模型声明元数据；OpenAI-compatible Chat Completions provider 会尊重显式 thinking off，不再从历史自动注入 `reasoning_effort` 或把该字段泄漏给不接受它的模型。
+- 修复后台子 Agent 被手动停止后立即恢复可能报 `already running` 的竞态；用户停止任务的原因也会保留在模型上下文中。
+- ⚠️ 超出范围：`/model` / `/effort` 的提示词缓存失效提醒、上下文用量显示、恢复会话排序、IDE 宿主 API 与 Web 侧模型刷新/布局修复，仅标记不展开。
+
+### v0.25.0 — 2026-07-16
+- **Anthropic-compatible effort 对齐官方配置**（#1746）：应用官方 effort profiles；未知模型回退到 128k 输出上限；`adaptive_thinking = false` 时只保留旧式预算档并省略请求里的 effort 参数；自定义命名模型的新会话也能正确使用模型默认思考强度。
+- CLI 意外退出时的诊断日志会记录实际错误，便于 headless / 自动化排错。
+- ⚠️ 超出范围：Web 任意附件、模型错误详情、后台子 Agent 结果回填与 UI；Web/server 的 bearer-token 百分号编码绕过和会话文件系统越界符号链接修复，仅标记不展开。
 
 ### v0.24.2 — 2026-07-15
 - **print 生命周期默认改为 steer**（#1704）：`kimi -p` 只要还有后台任务就保持运行，把每个完成结果以合成 user 消息回灌主 Agent 并触发新 turn；`print_background_mode` 支持 `exit` / `drain` / `steer`，默认 `steer`。`print_wait_ceiling_s=315360000`、`print_max_turns=100000`，近似不设限。
@@ -232,3 +243,5 @@
 | `kimi -p` turn 失败返回非 0、`[image]` 图片压缩、stream-json 重试事件、`[subagent] timeout_ms`、`print_background_mode`、动态工具能力改名为 `dynamically_loaded_tools` | v0.23.2–v0.23.6 |
 | Bash 超时转后台（`bash_auto_background_on_timeout`）、fork 保留媒体/plan/后台输出/cron、Web `/export` 诊断 ZIP（超出范围） | v0.24.0 |
 | `kimi -p` 默认 steer 后台结果、print 后台/子 Agent 默认无超时、Goal 跑到终态、LLM 重试默认 10 次、`/check-kimi-code-docs` | v0.24.2 |
+| Anthropic-compatible 官方 effort profiles、未知模型 128k 输出回退、`adaptive_thinking = false` 时省略 effort | v0.25.0 |
+| `coder` 使用后台任务/待办/Plan/Skills/嵌套 Agent，并等待自身后台任务落定后再返回 | v0.26.0 |

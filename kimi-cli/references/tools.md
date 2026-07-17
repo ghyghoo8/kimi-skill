@@ -54,6 +54,8 @@ Plan 模式下 `Write`/`Edit` 只能写计划文件，`TaskStop` 被拦截，其
 | `AskUserQuestion` | 自动 | 结构化提问；`questions`(1–4 题,每题 `question`+`options`(2–4)+可选 `header`≤12/`multi_select`)；自动加「其他」；`background`=true 起后台任务；宿主无交互能力则失败、改文本提问 |
 | `Skill` | 自动 | 调已注册 **inline** Skill；`skill`+可选 `args`；仅 `type=inline`、非 `disableModelInvocation`；嵌套≤3 层 |
 
+> **v0.26.0 `coder` 扩权**：经 `Agent` 工具启动的默认 `coder` 子 Agent 已可使用后台 Shell、`TodoList`、Plan、`Skill` 和 `Agent`（嵌套派发）。如果它结束 turn 时仍有后台任务，会等待这些任务全部落定后再向上层报告完成。`explore` / `plan` 仍保持各自的只读/无 Shell 边界；完整说明见 `kimi-subagent/references/patterns.md`。
+
 ## 后台任务
 
 管理经 `Bash`/`Agent`/`AskUserQuestion` 启动的后台任务。任务进终止态时自动把状态+**已保存输出路径**回送 Agent（v0.20 起；此前回送末尾输出）；提前查进度用 `TaskOutput`。

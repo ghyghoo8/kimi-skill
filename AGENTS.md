@@ -38,7 +38,7 @@ Use progressive disclosure: quick-reference belongs in each `SKILL.md`; exhausti
 
 ## Current Kimi Facts
 
-Content is last verified against `@moonshot-ai/kimi-code` v0.24.2, tag date 2026-07-15, checked on 2026-07-15.
+Content is last verified against `@moonshot-ai/kimi-code` v0.26.0, tag date 2026-07-16, checked on 2026-07-17.
 
 Current baseline:
 - CLI package: Node.js `@moonshot-ai/kimi-code`, Node >= 22.19.0.
@@ -52,6 +52,8 @@ Current baseline:
 - v0.23.0 enables preserved thinking by default for Kimi models when Thinking is on; disable with `[thinking] keep = "off"` or `KIMI_MODEL_THINKING_KEEP=off`. It also introduced experimental progressive tool disclosure under the early capability name `select_tools`; it remains off by default.
 - v0.23.4 added configurable image compression; v0.23.6 added `print_background_mode`, configurable sub-agent timeouts, and renamed the experimental dynamic-tool capability to `dynamically_loaded_tools`.
 - v0.24.0 moves timed-out foreground Bash commands into the background by default. v0.24.2 makes `kimi -p` use `print_background_mode = "steer"` by default with effectively unbounded print-mode background/sub-agent waits, raises per-step LLM retries from 3 to 10, and adds `/check-kimi-code-docs`.
+- v0.25.0 aligns Anthropic-compatible effort profiles, uses a 128k output fallback for unknown models, and honors `adaptive_thinking = false` by omitting the effort parameter.
+- v0.26.0 gives `coder` most main-Agent tools: background tasks, todo lists, Plan mode, Skills, and nested Agents. A coder run waits for its own background work to settle before reporting completion.
 
 Avoid stale Python-era facts unless explicitly documenting migration:
 - `uv ` installation flows for the old CLI.
